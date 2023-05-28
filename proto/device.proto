@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = ".;pb";
+
+message AVLData {
+  string imei = 1;
+  int64 timestamp = 2;
+  GPS gps = 3;
+  repeated IOElement io_elements = 4;
+}
+
+message GPS {
+  int32 longitude = 1;
+  int32 latitude = 2;
+  int32 altitude = 3;
+  int32 angle = 4;
+  int32 satellites = 5;
+  int32 speed = 6;
+}
+
+message IOElement {
+  int32 element_id = 1;
+  int32 value = 2;
+}
