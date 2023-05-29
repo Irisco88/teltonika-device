@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"github.com/packetify/teltonika-device/proto/pb"
 	"go.uber.org/zap"
 	"net"
 	"sync"
-	"time"
 )
 
 type Empty struct{}
@@ -18,21 +18,6 @@ type TeltonikaServer struct {
 	quitChan   chan Empty
 	wg         sync.WaitGroup
 	log        *zap.Logger
-}
-
-// Location Struct for Mongo GeoJSON
-type Location struct {
-	Type        string
-	Coordinates []float64
-}
-
-// Record Schema
-type Record struct {
-	Imei     string
-	Location Location
-	Time     time.Time
-	Angle    int16
-	Speed    int16
 }
 
 const PRECISION = 10000000.0
@@ -87,11 +72,8 @@ func (s *TeltonikaServer) acceptConnections() {
 func (s *TeltonikaServer) HandleConnection(conn net.Conn) {
 	defer conn.Close()
 	defer s.wg.Done()
-	var b []byte
+	authenticated := false
 	var imei string
-	knownIMEI := true
-	step := 1
-
 	for {
 		// Make a buffer to hold incoming data.
 		buf := make([]byte, 2048)
@@ -104,122 +86,133 @@ func (s *TeltonikaServer) HandleConnection(conn net.Conn) {
 		}
 
 		// Send a response if known IMEI and matches IMEI size
-		if knownIMEI {
-			b = []byte{1} // 0x01 if we accept the message
-
-			message := hex.EncodeToString(buf[:size])
+		if !authenticated {
+			imei = hex.EncodeToString(buf[:size])
 			fmt.Println("----------------------------------------")
 			fmt.Println("Data From:", conn.RemoteAddr().String())
 			fmt.Println("Size of message: ", size)
-			fmt.Println("Message:", message)
-			fmt.Println("Step:", step)
-
-			switch step {
-			case 1:
-				step = 2
-				imei = message
-				conn.Write(b)
-			case 2:
-				elements, err := parseData(buf, size, imei)
-				if err != nil {
-					fmt.Println("Error while parsing data", err)
-					break
-				}
-
-				conn.Write([]byte{0, 0, 0, uint8(len(elements))})
-			}
-
+			fmt.Println("Message:", imei)
+			s.ResponseAcceptMsg(conn)
+			authenticated = true
 		} else {
-			b = []byte{0} // 0x00 if we decline the message
-
-			conn.Write(b)
-			break
+			packet := &pb.AVLData{}
+			elements, err := parseData(buf, size, packet.Imei)
+			if err != nil {
+				fmt.Println("Error while parsing data", err)
+				break
+			}
+			conn.Write([]byte{0, 0, 0, uint8(len(elements))})
 		}
 	}
 }
 
-func parseData(data []byte, size int, imei string) (elements []Record, err error) {
+func (s *TeltonikaServer) ResponseAcceptMsg(conn net.Conn) {
+	conn.Write([]byte{1})
+
+}
+
+func (s *TeltonikaServer) ResponseDecline(conn net.Conn) {
+	b := []byte{0} // 0x00 if we decline the message
+	conn.Write(b)
+}
+
+func parseData(data []byte, size int, imei string) ([]*pb.AVLData, error) {
 	reader := bytes.NewBuffer(data)
 	// fmt.Println("Reader Size:", reader.Len())
 
 	// Header
-	reader.Next(4)                                    // 4 Zero Bytes
-	dataLength, err := streamToInt32(reader.Next(4))  // Header
+	reader.Next(4)                                   // 4 Zero Bytes
+	dataLength, err := streamToInt32(reader.Next(4)) // Header
+	if err != nil {
+		return nil, err
+	}
 	reader.Next(1)                                    // CodecID
-	recordNumber, err := streamToInt8(reader.Next(1)) // Number of Records
+	pointsNumber, err := streamToInt8(reader.Next(1)) // Number of Records
 	fmt.Println("Length of data:", dataLength)
 
-	elements = make([]Record, recordNumber)
+	points := make([]*pb.AVLData, pointsNumber)
 
-	var i int8 = 0
-	for i < recordNumber {
+	for i := int8(0); i < pointsNumber; i++ {
 		timestamp, err := streamToTime(reader.Next(8)) // Timestamp
 		reader.Next(1)                                 // Priority
 
 		// GPS Element
 		longitudeInt, err := streamToInt32(reader.Next(4)) // Longitude
-		longitude := float64(longitudeInt) / PRECISION
+		//longitude := float64(longitudeInt) / PRECISION
 		latitudeInt, err := streamToInt32(reader.Next(4)) // Latitude
-		latitude := float64(latitudeInt) / PRECISION
+		//latitude := float64(latitudeInt) / PRECISION
 
-		reader.Next(2)                              // Altitude
-		angle, err := streamToInt16(reader.Next(2)) // Angle
-		reader.Next(1)                              // Satellites
-		speed, err := streamToInt16(reader.Next(2)) // Speed
+		altitude, err := streamToInt16(reader.Next(2)) // Altitude
+		angle, err := streamToInt16(reader.Next(2))    // Angle
+		reader.Next(1)                                 // Satellites
+		speed, err := streamToInt16(reader.Next(2))    // Speed
 
 		if err != nil {
 			fmt.Println("Error while reading GPS Element")
 			break
 		}
 
-		elements[i] = Record{
-			imei,
-			Location{"Point",
-				[]float64{longitude, latitude}},
-			timestamp,
-			angle,
-			speed}
-
+		points[i] = &pb.AVLData{
+			Imei:      imei,
+			Timestamp: timestamp,
+			Gps: &pb.GPS{
+				Longitude: longitudeInt,
+				Latitude:  latitudeInt,
+				Altitude:  int32(altitude),
+				Angle:     int32(angle),
+				Speed:     int32(speed),
+			},
+		}
 		// IO Events Elements
 
 		reader.Next(1) // ioEventID
 		reader.Next(1) // total Elements
 
-		stage := 1
-		for stage <= 4 {
+		for stage := 1; stage <= 4; stage++ {
 			stageElements, err := streamToInt8(reader.Next(1))
 			if err != nil {
 				break
 			}
 
-			var j int8 = 0
-			for j < stageElements {
-				reader.Next(1) // elementID
-
+			for elementIndex := int8(0); elementIndex < stageElements; elementIndex++ {
+				elementID, err := streamToInt32(reader.Next(1)) // elementID
+				if err != nil {
+					return nil, err
+				}
+				var elementValue int64
 				switch stage {
 				case 1: // One byte IO Elements
-					_, err = streamToInt8(reader.Next(1))
+					tmp, e := streamToInt8(reader.Next(1))
+					if e != nil {
+						return nil, e
+					}
+					elementValue = int64(tmp)
 				case 2: // Two byte IO Elements
-					_, err = streamToInt16(reader.Next(2))
+					tmp, e := streamToInt16(reader.Next(2))
+					if e != nil {
+						return nil, e
+					}
+					elementValue = int64(tmp)
 				case 3: // Four byte IO Elements
-					_, err = streamToInt32(reader.Next(4))
+					tmp, e := streamToInt32(reader.Next(4))
+					if e != nil {
+						return nil, e
+					}
+					elementValue = int64(tmp)
 				case 4: // Eigth byte IO Elements
-					_, err = streamToInt64(reader.Next(8))
+					elementValue, err = streamToInt64(reader.Next(8))
 				}
-				j++
+				points[i].IoElements = append(points[i].IoElements, &pb.IOElement{
+					ElementId: elementID,
+					Value:     elementValue,
+				})
 			}
-			stage++
 		}
 
 		if err != nil {
 			fmt.Println("Error while reading IO Elements")
 			break
 		}
-
-		fmt.Println("Timestamp:", timestamp)
-		fmt.Println("Longitude:", longitude, "Latitude:", latitude)
-
-		i++
 	}
 
 	// Once finished with the records we read the Record Number and the CRC
@@ -227,7 +220,7 @@ func parseData(data []byte, size int, imei string) (elements []Record, err error
 	_, err = streamToInt8(reader.Next(1))  // Number of Records
 	_, err = streamToInt32(reader.Next(4)) // CRC
 
-	return
+	return points, nil
 }
 
 func (s *TeltonikaServer) Stop() {

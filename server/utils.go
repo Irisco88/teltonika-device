@@ -51,10 +51,10 @@ func twos_complement(input int32) int32 {
 	return -(input & mask) + (input &^ mask)
 }
 
-func streamToTime(data []byte) (time.Time, error) {
+func streamToTime(data []byte) (int64, error) {
 	miliseconds, err := streamToInt64(data)
 	seconds := int64(float64(miliseconds) / 1000.0)
 	nanoseconds := int64(miliseconds % 1000)
 
-	return time.Unix(seconds, nanoseconds), err
+	return time.Unix(seconds, nanoseconds).Unix(), err
 }

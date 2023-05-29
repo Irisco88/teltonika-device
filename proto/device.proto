@@ -22,5 +22,5 @@ message GPS {
 
 message IOElement {
   int32 element_id = 1;
-  int32 value = 2;
+  int64 value = 2;
 }
