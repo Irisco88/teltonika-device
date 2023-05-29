@@ -94,13 +94,13 @@ func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 			authenticated = true
 			continue
 		}
-		elements, err := parseData(buf, size, imei)
+		points, err := parseData(buf, size, imei)
 		if err != nil {
 			fmt.Println("Error while parsing data", err)
 			break
 		}
-		go ts.LogPoints(elements)
-		conn.Write([]byte{0, 0, 0, uint8(len(elements))})
+		go ts.LogPoints(points)
+		conn.Write([]byte{0, 0, 0, uint8(len(points))})
 	}
 }
 
@@ -149,10 +149,10 @@ func parseData(data []byte, size int, imei string) ([]*pb.AVLData, error) {
 		latitudeInt, err := streamToInt32(reader.Next(4)) // Latitude
 		//latitude := float64(latitudeInt) / PRECISION
 
-		altitude, err := streamToInt16(reader.Next(2)) // Altitude
-		angle, err := streamToInt16(reader.Next(2))    // Angle
-		reader.Next(1)                                 // Satellites
-		speed, err := streamToInt16(reader.Next(2))    // Speed
+		altitude, err := streamToInt16(reader.Next(2))  // Altitude
+		angle, err := streamToInt16(reader.Next(2))     // Angle
+		Satellites, err := streamToInt8(reader.Next(1)) // Satellites
+		speed, err := streamToInt16(reader.Next(2))     // Speed
 
 		if err != nil {
 			fmt.Println("Error while reading GPS Element")
@@ -163,11 +163,12 @@ func parseData(data []byte, size int, imei string) ([]*pb.AVLData, error) {
 			Imei:      imei,
 			Timestamp: timestamp,
 			Gps: &pb.GPS{
-				Longitude: longitudeInt,
-				Latitude:  latitudeInt,
-				Altitude:  int32(altitude),
-				Angle:     int32(angle),
-				Speed:     int32(speed),
+				Longitude:  longitudeInt,
+				Latitude:   latitudeInt,
+				Altitude:   int32(altitude),
+				Angle:      int32(angle),
+				Speed:      int32(speed),
+				Satellites: int32(Satellites),
 			},
 		}
 		// IO Events Elements
@@ -221,9 +222,7 @@ func parseData(data []byte, size int, imei string) ([]*pb.AVLData, error) {
 			break
 		}
 	}
-
 	// Once finished with the records we read the Record Number and the CRC
-
 	_, err = streamToInt8(reader.Next(1))  // Number of Records
 	_, err = streamToInt32(reader.Next(4)) // CRC
 
