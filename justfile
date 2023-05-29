@@ -18,3 +18,6 @@ proto:
     @cd proto && buf format -w && cd -
     @echo "generate proto..."
     @cd proto && buf generate && cd -
+
+upx: build
+    upx --best --lzma bin/teltonikasrv

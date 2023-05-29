@@ -81,22 +81,26 @@ func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 		// Read the incoming connection into the buffer.
 		size, err := conn.Read(buf)
 		if err != nil {
-			fmt.Println("Error reading:", err.Error())
+			ts.log.Error("read failed", zap.Error(err))
 			break
 		}
 		if !authenticated {
 			imei = hex.EncodeToString(buf[:size])
-			fmt.Println("----------------------------------------")
-			fmt.Println("Data From:", conn.RemoteAddr().String())
-			fmt.Println("Size of message: ", size)
-			fmt.Println("Message:", imei)
+			ts.log.Info("Data received",
+				zap.String("ip", conn.RemoteAddr().String()),
+				zap.Int("size", size),
+				zap.String("imei", imei),
+			)
 			ts.ResponseAcceptMsg(conn)
 			authenticated = true
 			continue
 		}
 		points, err := parseData(buf, size, imei)
 		if err != nil {
-			fmt.Println("Error while parsing data", err)
+			ts.log.Error("Error while parsing data",
+				zap.Error(err),
+				zap.String("imei", imei),
+			)
 			break
 		}
 		go ts.LogPoints(points)
