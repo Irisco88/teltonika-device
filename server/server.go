@@ -141,7 +141,7 @@ func parseData(data []byte, size int, imei string) ([]*pb.AVLData, error) {
 
 	for i := int8(0); i < pointsNumber; i++ {
 		timestamp, err := streamToTime(reader.Next(8)) // Timestamp
-		reader.Next(1)                                 // Priority
+		priority, err := streamToInt8(reader.Next(1))  // Priority
 
 		// GPS Element
 		longitudeInt, err := streamToInt32(reader.Next(4)) // Longitude
@@ -162,6 +162,7 @@ func parseData(data []byte, size int, imei string) ([]*pb.AVLData, error) {
 		points[i] = &pb.AVLData{
 			Imei:      imei,
 			Timestamp: timestamp,
+			Priority:  pb.PacketPriority(priority),
 			Gps: &pb.GPS{
 				Longitude:  longitudeInt,
 				Latitude:   latitudeInt,
@@ -207,7 +208,7 @@ func parseData(data []byte, size int, imei string) ([]*pb.AVLData, error) {
 						return nil, e
 					}
 					elementValue = int64(tmp)
-				case 4: // Eigth byte IO Elements
+				case 4: // Eight byte IO Elements
 					elementValue, err = streamToInt64(reader.Next(8))
 				}
 				points[i].IoElements = append(points[i].IoElements, &pb.IOElement{

@@ -7,8 +7,9 @@ option go_package = ".;pb";
 message AVLData {
   string imei = 1;
   int64 timestamp = 2;
-  GPS gps = 3;
-  repeated IOElement io_elements = 4;
+  PacketPriority priority = 3;
+  GPS gps = 4;
+  repeated IOElement io_elements = 5;
 }
 
 message GPS {
@@ -23,4 +24,10 @@ message GPS {
 message IOElement {
   int32 element_id = 1;
   int64 value = 2;
+}
+
+enum PacketPriority {
+  PACKET_PRIORITY_LOW = 0;
+  PACKET_PRIORITY_HIGH = 1;
+  PACKET_PRIORITY_PANIC = 2;
 }
