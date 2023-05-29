@@ -40,38 +40,38 @@ func NewServer(listenAddr string, logger *zap.Logger) TcpServerInterface {
 	}
 }
 
-func (s *TeltonikaServer) Start() {
-	ln, err := net.Listen("tcp", s.listenAddr)
+func (ts *TeltonikaServer) Start() {
+	ln, err := net.Listen("tcp", ts.listenAddr)
 	if err != nil {
-		s.log.Error("failed to listen", zap.Error(err))
+		ts.log.Error("failed to listen", zap.Error(err))
 		return
 	}
 	defer ln.Close()
-	s.ln = ln
+	ts.ln = ln
 
-	go s.acceptConnections()
-	s.log.Info("server started",
-		zap.String("ListenAddress", s.listenAddr),
+	go ts.acceptConnections()
+	ts.log.Info("server started",
+		zap.String("ListenAddress", ts.listenAddr),
 	)
-	<-s.quitChan
+	<-ts.quitChan
 }
 
-func (s *TeltonikaServer) acceptConnections() {
+func (ts *TeltonikaServer) acceptConnections() {
 	for {
-		conn, err := s.ln.Accept()
+		conn, err := ts.ln.Accept()
 		if err != nil {
-			s.log.Error("accept connection error", zap.Error(err))
+			ts.log.Error("accept connection error", zap.Error(err))
 			continue
 		}
-		s.log.Info("new Connection to the server", zap.String("Address", conn.RemoteAddr().String()))
-		s.wg.Add(1)
-		go s.HandleConnection(conn)
+		ts.log.Info("new Connection to the server", zap.String("Address", conn.RemoteAddr().String()))
+		ts.wg.Add(1)
+		go ts.HandleConnection(conn)
 	}
 }
 
-func (s *TeltonikaServer) HandleConnection(conn net.Conn) {
+func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 	defer conn.Close()
-	defer s.wg.Done()
+	defer ts.wg.Done()
 	authenticated := false
 	var imei string
 	for {
@@ -84,36 +84,43 @@ func (s *TeltonikaServer) HandleConnection(conn net.Conn) {
 			fmt.Println("Error reading:", err.Error())
 			break
 		}
-
-		// Send a response if known IMEI and matches IMEI size
 		if !authenticated {
 			imei = hex.EncodeToString(buf[:size])
 			fmt.Println("----------------------------------------")
 			fmt.Println("Data From:", conn.RemoteAddr().String())
 			fmt.Println("Size of message: ", size)
 			fmt.Println("Message:", imei)
-			s.ResponseAcceptMsg(conn)
+			ts.ResponseAcceptMsg(conn)
 			authenticated = true
-		} else {
-			packet := &pb.AVLData{}
-			elements, err := parseData(buf, size, packet.Imei)
-			if err != nil {
-				fmt.Println("Error while parsing data", err)
-				break
-			}
-			conn.Write([]byte{0, 0, 0, uint8(len(elements))})
+			continue
 		}
+		elements, err := parseData(buf, size, imei)
+		if err != nil {
+			fmt.Println("Error while parsing data", err)
+			break
+		}
+		go ts.LogPoints(elements)
+		conn.Write([]byte{0, 0, 0, uint8(len(elements))})
 	}
 }
 
-func (s *TeltonikaServer) ResponseAcceptMsg(conn net.Conn) {
-	conn.Write([]byte{1})
-
+func (ts *TeltonikaServer) LogPoints(points []*pb.AVLData) {
+	for _, p := range points {
+		ts.log.Info("new packet",
+			zap.String("IMEI", p.GetImei()),
+			zap.Int64("timestamp", p.GetTimestamp()),
+			zap.Any("gps", p.GetGps()),
+			zap.Any("IOElements", p.GetIoElements()),
+		)
+	}
 }
 
-func (s *TeltonikaServer) ResponseDecline(conn net.Conn) {
-	b := []byte{0} // 0x00 if we decline the message
-	conn.Write(b)
+func (ts *TeltonikaServer) ResponseAcceptMsg(conn net.Conn) {
+	conn.Write([]byte{1})
+}
+
+func (ts *TeltonikaServer) ResponseDecline(conn net.Conn) {
+	conn.Write([]byte{0})
 }
 
 func parseData(data []byte, size int, imei string) ([]*pb.AVLData, error) {
@@ -223,8 +230,8 @@ func parseData(data []byte, size int, imei string) ([]*pb.AVLData, error) {
 	return points, nil
 }
 
-func (s *TeltonikaServer) Stop() {
-	s.wg.Wait()
-	s.quitChan <- Empty{}
-	s.log.Info("stop server")
+func (ts *TeltonikaServer) Stop() {
+	ts.wg.Wait()
+	ts.quitChan <- Empty{}
+	ts.log.Info("stop server")
 }
