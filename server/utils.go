@@ -3,7 +3,10 @@ package server
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
+	"fmt"
 	"math"
+	"strconv"
 	"time"
 )
 
@@ -57,4 +60,22 @@ func streamToTime(data []byte) (int64, error) {
 	nanoseconds := int64(miliseconds % 1000)
 
 	return time.Unix(seconds, nanoseconds).Unix(), err
+}
+
+func DecodeIMEI(data []byte) (string, error) {
+	imeiLenHex := hex.EncodeToString(data[0:2])
+	imeiLength, err := strconv.ParseInt(imeiLenHex, 16, 64)
+	if err != nil {
+		return "", fmt.Errorf("decode imei len error %s", err.Error())
+	}
+	imeiHex := hex.EncodeToString(data[2:])
+	imeiBytes, err := hex.DecodeString(imeiHex)
+	if err != nil {
+		return "", fmt.Errorf("decode error %s", err.Error())
+	}
+	imei := string(imeiBytes)
+	if len(imei) != int(imeiLength) {
+		return "", fmt.Errorf("invalid imei length")
+	}
+	return imei, nil
 }

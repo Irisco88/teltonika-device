@@ -2,7 +2,6 @@ package server
 
 import (
 	"bytes"
-	"encoding/hex"
 	"fmt"
 	"github.com/packetify/teltonika-device/proto/pb"
 	"go.uber.org/zap"
@@ -85,7 +84,11 @@ func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 			break
 		}
 		if !authenticated {
-			imei = hex.EncodeToString(buf[:size])
+			imei, err = DecodeIMEI(buf[:size])
+			if err != nil {
+				ts.log.Error("decode imei failed", zap.Error(err))
+				return
+			}
 			ts.log.Info("Data received",
 				zap.String("ip", conn.RemoteAddr().String()),
 				zap.Int("size", size),
