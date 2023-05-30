@@ -28,7 +28,7 @@ func TestDecodeIMEI(t *testing.T) {
 				assertion.ErrorIs(err, test.errWant)
 			} else {
 				assertion.Nil(err)
-				assertion.Equal(imei, test.imeiResult)
+				assertion.Equal(test.imeiResult, imei)
 			}
 		})
 	}

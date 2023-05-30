@@ -98,7 +98,7 @@ func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 			authenticated = true
 			continue
 		}
-		points, err := parseData(buf, size, imei)
+		points, err := parseData(buf, imei)
 		if err != nil {
 			ts.log.Error("Error while parsing data",
 				zap.Error(err),
@@ -130,36 +130,63 @@ func (ts *TeltonikaServer) ResponseDecline(conn net.Conn) {
 	conn.Write([]byte{0})
 }
 
-func parseData(data []byte, size int, imei string) ([]*pb.AVLData, error) {
+func parseData(data []byte, imei string) ([]*pb.AVLData, error) {
 	reader := bytes.NewBuffer(data)
 	// fmt.Println("Reader Size:", reader.Len())
 
 	// Header
-	reader.Next(4)                                   // 4 Zero Bytes
-	dataLength, err := streamToInt32(reader.Next(4)) // Header
+	reader.Next(4)                                           // 4 Zero Bytes
+	dataLength, err := streamToNumber[int32](reader.Next(4)) // Header
 	if err != nil {
 		return nil, err
 	}
-	reader.Next(1)                                    // CodecID
-	pointsNumber, err := streamToInt8(reader.Next(1)) // Number of Records
+	reader.Next(1)                                            // CodecID
+	pointsNumber, err := streamToNumber[int8](reader.Next(1)) // Number of Records
+	if err != nil {
+		return nil, err
+	}
 	fmt.Println("Length of data:", dataLength)
 
 	points := make([]*pb.AVLData, pointsNumber)
 
 	for i := int8(0); i < pointsNumber; i++ {
-		timestamp, err := streamToTime(reader.Next(8)) // Timestamp
-		priority, err := streamToInt8(reader.Next(1))  // Priority
+		timestamp, err := streamToNumber[int64](reader.Next(8)) // Timestamp
+		if err != nil {
+			return nil, err
+		}
+		priority, err := streamToNumber[uint8](reader.Next(1)) // Priority
+		if err != nil {
+			return nil, err
+		}
 
 		// GPS Element
 		longitudeInt, err := streamToInt32(reader.Next(4)) // Longitude
+		if err != nil {
+			return nil, err
+		}
 		//longitude := float64(longitudeInt) / PRECISION
 		latitudeInt, err := streamToInt32(reader.Next(4)) // Latitude
+		if err != nil {
+			return nil, err
+		}
 		//latitude := float64(latitudeInt) / PRECISION
 
-		altitude, err := streamToInt16(reader.Next(2))  // Altitude
-		angle, err := streamToInt16(reader.Next(2))     // Angle
-		Satellites, err := streamToInt8(reader.Next(1)) // Satellites
-		speed, err := streamToInt16(reader.Next(2))     // Speed
+		altitude, err := streamToNumber[int16](reader.Next(2)) // Altitude
+		if err != nil {
+			return nil, err
+		}
+		angle, err := streamToNumber[int16](reader.Next(2)) // Angle
+		if err != nil {
+			return nil, err
+		}
+		Satellites, err := streamToNumber[uint8](reader.Next(1)) // Satellites
+		if err != nil {
+			return nil, err
+		}
+		speed, err := streamToNumber[int16](reader.Next(2)) // Speed
+		if err != nil {
+			return nil, err
+		}
 
 		if err != nil {
 			fmt.Println("Error while reading GPS Element")
@@ -185,12 +212,12 @@ func parseData(data []byte, size int, imei string) ([]*pb.AVLData, error) {
 		reader.Next(1) // total Elements
 
 		for stage := 1; stage <= 4; stage++ {
-			stageElements, err := streamToInt8(reader.Next(1))
+			stageElements, err := streamToNumber[uint8](reader.Next(1))
 			if err != nil {
 				break
 			}
 
-			for elementIndex := int8(0); elementIndex < stageElements; elementIndex++ {
+			for elementIndex := uint8(0); elementIndex < stageElements; elementIndex++ {
 				elementID, err := streamToInt32(reader.Next(1)) // elementID
 				if err != nil {
 					return nil, err
@@ -198,25 +225,25 @@ func parseData(data []byte, size int, imei string) ([]*pb.AVLData, error) {
 				var elementValue int64
 				switch stage {
 				case 1: // One byte IO Elements
-					tmp, e := streamToInt8(reader.Next(1))
+					tmp, e := streamToNumber[int8](reader.Next(1))
 					if e != nil {
 						return nil, e
 					}
 					elementValue = int64(tmp)
 				case 2: // Two byte IO Elements
-					tmp, e := streamToInt16(reader.Next(2))
+					tmp, e := streamToTime[int16](reader.Next(2))
 					if e != nil {
 						return nil, e
 					}
-					elementValue = int64(tmp)
+					elementValue = tmp
 				case 3: // Four byte IO Elements
-					tmp, e := streamToInt32(reader.Next(4))
+					tmp, e := streamToTime[int32](reader.Next(4))
 					if e != nil {
 						return nil, e
 					}
-					elementValue = int64(tmp)
+					elementValue = tmp
 				case 4: // Eight byte IO Elements
-					elementValue, err = streamToInt64(reader.Next(8))
+					elementValue, err = streamToTime[int64](reader.Next(8))
 				}
 				points[i].IoElements = append(points[i].IoElements, &pb.IOElement{
 					ElementId: elementID,
@@ -231,8 +258,8 @@ func parseData(data []byte, size int, imei string) ([]*pb.AVLData, error) {
 		}
 	}
 	// Once finished with the records we read the Record Number and the CRC
-	_, err = streamToInt8(reader.Next(1))  // Number of Records
-	_, err = streamToInt32(reader.Next(4)) // CRC
+	_, err = streamToNumber[uint8](reader.Next(1)) // Number of Records
+	_, err = streamToNumber[int32](reader.Next(4)) // CRC
 
 	return points, nil
 }
