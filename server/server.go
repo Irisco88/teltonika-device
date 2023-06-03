@@ -98,7 +98,7 @@ func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 			authenticated = true
 			continue
 		}
-		points, err := parseData(buf, imei)
+		points, err := ParseData(buf, imei)
 		if err != nil {
 			ts.log.Error("Error while parsing data",
 				zap.Error(err),
@@ -130,7 +130,7 @@ func (ts *TeltonikaServer) ResponseDecline(conn net.Conn) {
 	conn.Write([]byte{0})
 }
 
-func parseData(data []byte, imei string) ([]*pb.AVLData, error) {
+func ParseData(data []byte, imei string) ([]*pb.AVLData, error) {
 	reader := bytes.NewBuffer(data)
 	// fmt.Println("Reader Size:", reader.Len())
 
@@ -188,11 +188,6 @@ func parseData(data []byte, imei string) ([]*pb.AVLData, error) {
 			return nil, err
 		}
 
-		if err != nil {
-			fmt.Println("Error while reading GPS Element")
-			break
-		}
-
 		points[i] = &pb.AVLData{
 			Imei:      imei,
 			Timestamp: timestamp,
@@ -207,18 +202,22 @@ func parseData(data []byte, imei string) ([]*pb.AVLData, error) {
 			},
 		}
 		// IO Events Elements
-
-		reader.Next(1) // ioEventID
-		reader.Next(1) // total Elements
-
+		ioEventID, err := streamToNumber[uint16](reader.Next(2))
+		if err != nil {
+			return nil, err
+		}
+		totalElements, err := streamToNumber[uint16](reader.Next(2))
+		if err != nil {
+			return nil, err
+		}
+		_, _ = totalElements, ioEventID
 		for stage := 1; stage <= 4; stage++ {
-			stageElements, err := streamToNumber[uint8](reader.Next(1))
+			stageElements, err := streamToNumber[uint16](reader.Next(2))
 			if err != nil {
 				break
 			}
-
-			for elementIndex := uint8(0); elementIndex < stageElements; elementIndex++ {
-				elementID, err := streamToInt32(reader.Next(1)) // elementID
+			for elementIndex := uint16(0); elementIndex < stageElements; elementIndex++ {
+				elementID, err := streamToNumber[uint16](reader.Next(2))
 				if err != nil {
 					return nil, err
 				}
@@ -231,27 +230,29 @@ func parseData(data []byte, imei string) ([]*pb.AVLData, error) {
 					}
 					elementValue = int64(tmp)
 				case 2: // Two byte IO Elements
-					tmp, e := streamToTime[int16](reader.Next(2))
+					tmp, e := streamToNumber[int16](reader.Next(2))
 					if e != nil {
 						return nil, e
 					}
-					elementValue = tmp
+					elementValue = int64(tmp)
 				case 3: // Four byte IO Elements
-					tmp, e := streamToTime[int32](reader.Next(4))
+					tmp, e := streamToNumber[int32](reader.Next(4))
 					if e != nil {
 						return nil, e
 					}
-					elementValue = tmp
+					elementValue = int64(tmp)
 				case 4: // Eight byte IO Elements
-					elementValue, err = streamToTime[int64](reader.Next(8))
+					elementValue, err = streamToNumber[int64](reader.Next(8))
+					if err != nil {
+						return nil, err
+					}
 				}
 				points[i].IoElements = append(points[i].IoElements, &pb.IOElement{
-					ElementId: elementID,
+					ElementId: int32(elementID),
 					Value:     elementValue,
 				})
 			}
 		}
-
 		if err != nil {
 			fmt.Println("Error while reading IO Elements")
 			break
