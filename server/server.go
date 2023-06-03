@@ -113,7 +113,7 @@ func (ts *TeltonikaServer) LogPoints(points []*pb.AVLData) {
 	for _, p := range points {
 		ts.log.Info("new packet",
 			zap.String("IMEI", p.GetImei()),
-			zap.Int64("timestamp", p.GetTimestamp()),
+			zap.Uint64("timestamp", p.GetTimestamp()),
 			zap.Any("gps", p.GetGps()),
 			zap.Any("IOElements", p.GetIoElements()),
 		)

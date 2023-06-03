@@ -41,55 +41,33 @@ func ParsePacket(data []byte, imei string) ([]*pb.AVLData, error) {
 	}
 	points := make([]*pb.AVLData, header.NumberOfData)
 	for i := uint8(0); i < header.NumberOfData; i++ {
-		timestamp, err := streamToNumber[int64](reader.Next(8))
-		if err != nil {
-			return nil, err
-		}
-		priority, err := streamToNumber[uint8](reader.Next(1))
-		if err != nil {
-			return nil, err
-		}
-
+		timestamp := binary.BigEndian.Uint64(reader.Next(8))
+		priority := reader.Next(1)[0]
 		// GPS Element
-		longitudeInt, err := streamToInt32(reader.Next(4))
-		if err != nil {
-			return nil, err
+		longitude := int32(binary.BigEndian.Uint32(reader.Next(4)))
+		if longitude>>31 == 1 {
+			longitude *= -1
 		}
-		//longitude := float64(longitudeInt) / PRECISION
-		latitudeInt, err := streamToInt32(reader.Next(4))
-		if err != nil {
-			return nil, err
+		latitude := int32(binary.BigEndian.Uint32(reader.Next(4)))
+		if latitude>>31 == 1 {
+			latitude *= -1
 		}
-		//latitude := float64(latitudeInt) / PRECISION
-
-		altitude, err := streamToNumber[int16](reader.Next(2))
-		if err != nil {
-			return nil, err
-		}
-		angle, err := streamToNumber[int16](reader.Next(2))
-		if err != nil {
-			return nil, err
-		}
-		Satellites, err := streamToNumber[uint8](reader.Next(1))
-		if err != nil {
-			return nil, err
-		}
-		speed, err := streamToNumber[int16](reader.Next(2))
-		if err != nil {
-			return nil, err
-		}
+		altitude := int32(binary.BigEndian.Uint16(reader.Next(2)))
+		angle := int32(binary.BigEndian.Uint16(reader.Next(2)))
+		Satellites := int32(reader.Next(1)[0])
+		speed := int32(binary.BigEndian.Uint16(reader.Next(2)))
 
 		points[i] = &pb.AVLData{
 			Imei:      imei,
 			Timestamp: timestamp,
 			Priority:  pb.PacketPriority(priority),
 			Gps: &pb.GPS{
-				Longitude:  longitudeInt,
-				Latitude:   latitudeInt,
-				Altitude:   int32(altitude),
-				Angle:      int32(angle),
-				Speed:      int32(speed),
-				Satellites: int32(Satellites),
+				Longitude:  float64(longitude),
+				Latitude:   float64(latitude),
+				Altitude:   altitude,
+				Angle:      angle,
+				Speed:      speed,
+				Satellites: Satellites,
 			},
 		}
 		eventID, elements, err := ParseIOElements(reader)
@@ -114,53 +92,27 @@ func ParsePacket(data []byte, imei string) ([]*pb.AVLData, error) {
 }
 
 func ParseIOElements(reader *bytes.Buffer) (eventID uint16, elements []*pb.IOElement, err error) {
-	eventID, err = streamToNumber[uint16](reader.Next(2))
-	if err != nil {
-		return 0, nil, err
-	}
-	totalElements, err := streamToNumber[uint16](reader.Next(2))
-	if err != nil {
-		return 0, nil, err
-	}
+	eventID = binary.BigEndian.Uint16(reader.Next(2))
+	totalElements := binary.BigEndian.Uint16(reader.Next(2))
+
 	for stage := 1; stage <= 4; stage++ {
-		stageElements, err := streamToNumber[uint16](reader.Next(2))
-		if err != nil {
-			break
-		}
+		stageElements := binary.BigEndian.Uint16(reader.Next(2))
+
 		for elementIndex := uint16(0); elementIndex < stageElements; elementIndex++ {
 			var (
 				elementValue int64
 				elementID    uint16
 			)
-			elementID, err = streamToNumber[uint16](reader.Next(2))
-			if err != nil {
-				return 0, nil, err
-			}
-
+			elementID = binary.BigEndian.Uint16(reader.Next(2))
 			switch stage {
 			case 1: // One byte IO Elements
-				tmp, e := streamToNumber[int8](reader.Next(1))
-				if e != nil {
-					return 0, nil, e
-				}
-				elementValue = int64(tmp)
+				elementValue = int64(reader.Next(1)[0])
 			case 2: // Two byte IO Elements
-				tmp, e := streamToNumber[int16](reader.Next(2))
-				if e != nil {
-					return 0, nil, e
-				}
-				elementValue = int64(tmp)
+				elementValue = int64(binary.BigEndian.Uint16(reader.Next(2)))
 			case 3: // Four byte IO Elements
-				tmp, e := streamToNumber[int32](reader.Next(4))
-				if e != nil {
-					return 0, nil, e
-				}
-				elementValue = int64(tmp)
+				elementValue = int64(binary.BigEndian.Uint32(reader.Next(4)))
 			case 4: // Eight byte IO Elements
-				elementValue, err = streamToNumber[int64](reader.Next(8))
-				if err != nil {
-					return 0, nil, err
-				}
+				elementValue = int64(binary.BigEndian.Uint64(reader.Next(8)))
 			}
 			elements = append(elements, &pb.IOElement{
 				ElementId: int32(elementID),

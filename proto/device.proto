@@ -6,7 +6,7 @@ option go_package = ".;pb";
 
 message AVLData {
   string imei = 1;
-  int64 timestamp = 2;
+  uint64 timestamp = 2;
   PacketPriority priority = 3;
   GPS gps = 4;
   repeated IOElement io_elements = 5;
@@ -14,8 +14,8 @@ message AVLData {
 }
 
 message GPS {
-  int32 longitude = 1;
-  int32 latitude = 2;
+  double longitude = 1;
+  double latitude = 2;
   int32 altitude = 3;
   int32 angle = 4;
   int32 satellites = 5;
