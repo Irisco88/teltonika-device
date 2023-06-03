@@ -1,9 +1,11 @@
 package server
 
 import (
+	"errors"
 	"github.com/packetify/teltonika-device/proto/pb"
 	"github.com/packetify/teltonika-device/server/parser"
 	"go.uber.org/zap"
+	"io"
 	"net"
 	"sync"
 )
@@ -79,8 +81,10 @@ func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 		// Read the incoming connection into the buffer.
 		size, err := conn.Read(buf)
 		if err != nil {
-			ts.log.Error("read failed", zap.Error(err))
-			break
+			if !errors.Is(err, io.EOF) {
+				ts.log.Error("read failed", zap.Error(err))
+			}
+			return
 		}
 		if !authenticated {
 			imei, err = parser.DecodeIMEI(buf[:size])
@@ -103,7 +107,7 @@ func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 				zap.Error(err),
 				zap.String("imei", imei),
 			)
-			break
+			return
 		}
 		go ts.LogPoints(points)
 		ts.ResponseAcceptDataPack(conn, len(points))
