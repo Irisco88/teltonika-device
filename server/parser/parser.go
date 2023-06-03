@@ -14,6 +14,7 @@ var (
 	ErrInvalidNumberOfData = errors.New("invalid number of data")
 	ErrInvalidHeader       = errors.New("parse header failed")
 	ErrCheckCRC            = errors.New("CRC check failed")
+	ErrUnsupportedCodec    = errors.New("codec not supported")
 )
 
 type Header struct {
@@ -40,6 +41,29 @@ func ParsePacket(data []byte, imei string) ([]*pb.AVLData, error) {
 	if err != nil {
 		return nil, ErrInvalidHeader
 	}
+	var points []*pb.AVLData
+	if header.CodecID == 0x8e {
+		points, err = ParseCodec8EPacket(reader, header, imei)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, ErrUnsupportedCodec
+	}
+	// Once finished with the records we read the Record Number and the CRC
+	if reader.Next(1)[0] != header.NumberOfData {
+		return nil, ErrInvalidNumberOfData
+	}
+	crc := binary.BigEndian.Uint32(reader.Next(4))
+	calculatedCRC := calculateCRC16(data)
+	if uint32(calculatedCRC) != crc {
+		//TODO check crc
+		//return nil, ErrCheckCRC
+	}
+	return points, nil
+}
+
+func ParseCodec8EPacket(reader *bytes.Buffer, header *Header, imei string) ([]*pb.AVLData, error) {
 	points := make([]*pb.AVLData, header.NumberOfData)
 	for i := uint8(0); i < header.NumberOfData; i++ {
 		timestamp := binary.BigEndian.Uint64(reader.Next(8))
@@ -71,7 +95,7 @@ func ParsePacket(data []byte, imei string) ([]*pb.AVLData, error) {
 				Satellites: Satellites,
 			},
 		}
-		eventID, elements, err := ParseIOElements(reader)
+		eventID, elements, err := ParseCodec8eIOElements(reader)
 		if err != nil {
 			return nil, fmt.Errorf("parse io elements failed:%v", err)
 		}
@@ -79,19 +103,10 @@ func ParsePacket(data []byte, imei string) ([]*pb.AVLData, error) {
 		points[i].EventId = uint32(eventID)
 
 	}
-	// Once finished with the records we read the Record Number and the CRC
-	if reader.Next(1)[0] != header.NumberOfData {
-		return nil, ErrInvalidNumberOfData
-	}
-	crc := binary.BigEndian.Uint32(reader.Next(4))
-	calculatedCRC := calculateCRC16(data)
-	if uint32(calculatedCRC) != crc {
-		//return nil, ErrCheckCRC
-	}
 	return points, nil
 }
 
-func ParseIOElements(reader *bytes.Buffer) (eventID uint16, elements []*pb.IOElement, err error) {
+func ParseCodec8eIOElements(reader *bytes.Buffer) (eventID uint16, elements []*pb.IOElement, err error) {
 	eventID = binary.BigEndian.Uint16(reader.Next(2))
 	totalElements := binary.BigEndian.Uint16(reader.Next(2))
 
