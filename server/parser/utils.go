@@ -1,4 +1,4 @@
-package server
+package parser
 
 import (
 	"bytes"
@@ -61,4 +61,23 @@ func DecodeIMEI(data []byte) (string, error) {
 		return "", fmt.Errorf("invalid imei length")
 	}
 	return imei, nil
+}
+
+func calculateCRC16(data []byte) uint16 {
+	crc := uint16(0xFFFF) // Initial CRC value
+
+	for _, b := range data {
+		crc ^= uint16(b)
+
+		for i := 0; i < 8; i++ {
+			if (crc & 0x0001) != 0 {
+				crc >>= 1
+				crc ^= 0xA001
+			} else {
+				crc >>= 1
+			}
+		}
+	}
+
+	return crc
 }

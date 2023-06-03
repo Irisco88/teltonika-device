@@ -1,4 +1,4 @@
-package server
+package parser
 
 import (
 	"bytes"
@@ -13,6 +13,7 @@ var (
 	ErrInvalidPreamble     = errors.New("invalid Preamble")
 	ErrInvalidNumberOfData = errors.New("invalid number of data")
 	ErrInvalidHeader       = errors.New("parse header failed")
+	ErrCheckCRC            = errors.New("CRC check failed")
 )
 
 type Header struct {
@@ -79,15 +80,14 @@ func ParsePacket(data []byte, imei string) ([]*pb.AVLData, error) {
 
 	}
 	// Once finished with the records we read the Record Number and the CRC
-	numberOfData2, err := streamToNumber[uint8](reader.Next(1)) // Number of Records
-	if err != nil {
-		return nil, err
-	}
-	if numberOfData2 != header.NumberOfData {
+	if reader.Next(1)[0] != header.NumberOfData {
 		return nil, ErrInvalidNumberOfData
 	}
-	_, err = streamToNumber[uint32](reader.Next(4)) // CRC
-
+	crc := binary.BigEndian.Uint32(reader.Next(4))
+	calculatedCRC := calculateCRC16(data)
+	if uint32(calculatedCRC) != crc {
+		//return nil, ErrCheckCRC
+	}
 	return points, nil
 }
 
