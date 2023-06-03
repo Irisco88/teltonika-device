@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/packetify/teltonika-device/proto/pb"
 	"go.uber.org/zap"
@@ -201,62 +202,12 @@ func ParseData(data []byte, imei string) ([]*pb.AVLData, error) {
 				Satellites: int32(Satellites),
 			},
 		}
-		// IO Events Elements
-		ioEventID, err := streamToNumber[uint16](reader.Next(2))
+		eventID, elements, err := ParseIOElements(reader.Bytes())
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("parse io elements failed:%v", err)
 		}
-		totalElements, err := streamToNumber[uint16](reader.Next(2))
-		if err != nil {
-			return nil, err
-		}
-		_, _ = totalElements, ioEventID
-		for stage := 1; stage <= 4; stage++ {
-			stageElements, err := streamToNumber[uint16](reader.Next(2))
-			if err != nil {
-				break
-			}
-			for elementIndex := uint16(0); elementIndex < stageElements; elementIndex++ {
-				elementID, err := streamToNumber[uint16](reader.Next(2))
-				if err != nil {
-					return nil, err
-				}
-				var elementValue int64
-				switch stage {
-				case 1: // One byte IO Elements
-					tmp, e := streamToNumber[int8](reader.Next(1))
-					if e != nil {
-						return nil, e
-					}
-					elementValue = int64(tmp)
-				case 2: // Two byte IO Elements
-					tmp, e := streamToNumber[int16](reader.Next(2))
-					if e != nil {
-						return nil, e
-					}
-					elementValue = int64(tmp)
-				case 3: // Four byte IO Elements
-					tmp, e := streamToNumber[int32](reader.Next(4))
-					if e != nil {
-						return nil, e
-					}
-					elementValue = int64(tmp)
-				case 4: // Eight byte IO Elements
-					elementValue, err = streamToNumber[int64](reader.Next(8))
-					if err != nil {
-						return nil, err
-					}
-				}
-				points[i].IoElements = append(points[i].IoElements, &pb.IOElement{
-					ElementId: int32(elementID),
-					Value:     elementValue,
-				})
-			}
-		}
-		if err != nil {
-			fmt.Println("Error while reading IO Elements")
-			break
-		}
+		points[i].IoElements = elements
+		points[i].EventId = uint32(eventID)
 	}
 	// Once finished with the records we read the Record Number and the CRC
 	_, err = streamToNumber[uint8](reader.Next(1)) // Number of Records
@@ -265,6 +216,68 @@ func ParseData(data []byte, imei string) ([]*pb.AVLData, error) {
 	return points, nil
 }
 
+func ParseIOElements(data []byte) (eventID uint16, elements []*pb.IOElement, err error) {
+	// IO Events Elements
+	reader := bytes.NewBuffer(data)
+	eventID, err = streamToNumber[uint16](reader.Next(2))
+	if err != nil {
+		return 0, nil, err
+	}
+	totalElements, err := streamToNumber[uint16](reader.Next(2))
+	if err != nil {
+		return 0, nil, err
+	}
+	for stage := 1; stage <= 4; stage++ {
+		stageElements, err := streamToNumber[uint16](reader.Next(2))
+		if err != nil {
+			break
+		}
+		for elementIndex := uint16(0); elementIndex < stageElements; elementIndex++ {
+			var (
+				elementValue int64
+				elementID    uint16
+			)
+			elementID, err = streamToNumber[uint16](reader.Next(2))
+			if err != nil {
+				return 0, nil, err
+			}
+
+			switch stage {
+			case 1: // One byte IO Elements
+				tmp, e := streamToNumber[int8](reader.Next(1))
+				if e != nil {
+					return 0, nil, e
+				}
+				elementValue = int64(tmp)
+			case 2: // Two byte IO Elements
+				tmp, e := streamToNumber[int16](reader.Next(2))
+				if e != nil {
+					return 0, nil, e
+				}
+				elementValue = int64(tmp)
+			case 3: // Four byte IO Elements
+				tmp, e := streamToNumber[int32](reader.Next(4))
+				if e != nil {
+					return 0, nil, e
+				}
+				elementValue = int64(tmp)
+			case 4: // Eight byte IO Elements
+				elementValue, err = streamToNumber[int64](reader.Next(8))
+				if err != nil {
+					return 0, nil, err
+				}
+			}
+			elements = append(elements, &pb.IOElement{
+				ElementId: int32(elementID),
+				Value:     elementValue,
+			})
+		}
+	}
+	if len(elements) != int(totalElements) {
+		return 0, nil, errors.New("invalid elements length")
+	}
+	return eventID, elements, nil
+}
 func (ts *TeltonikaServer) Stop() {
 	ts.wg.Wait()
 	ts.quitChan <- Empty{}

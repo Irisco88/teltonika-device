@@ -10,6 +10,7 @@ message AVLData {
   PacketPriority priority = 3;
   GPS gps = 4;
   repeated IOElement io_elements = 5;
+  uint32 event_id = 6;
 }
 
 message GPS {
