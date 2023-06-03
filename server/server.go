@@ -93,7 +93,7 @@ func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 				zap.Int("size", size),
 				zap.String("imei", imei),
 			)
-			ts.ResponseAcceptMsg(conn)
+			ts.ResponseAcceptIMEI(conn)
 			authenticated = true
 			continue
 		}
@@ -106,7 +106,7 @@ func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 			break
 		}
 		go ts.LogPoints(points)
-		conn.Write([]byte{0, 0, 0, uint8(len(points))})
+		ts.ResponseAcceptDataPack(conn, len(points))
 	}
 }
 
@@ -121,12 +121,24 @@ func (ts *TeltonikaServer) LogPoints(points []*pb.AVLData) {
 	}
 }
 
-func (ts *TeltonikaServer) ResponseAcceptMsg(conn net.Conn) {
-	conn.Write([]byte{1})
+func (ts *TeltonikaServer) ResponseAcceptIMEI(conn net.Conn) {
+	_, err := conn.Write([]byte{1})
+	if err != nil {
+		ts.log.Error("response accept imei failed", zap.Error(err))
+	}
+}
+func (ts *TeltonikaServer) ResponseAcceptDataPack(conn net.Conn, pointLen int) {
+	_, err := conn.Write([]byte{0, 0, 0, uint8(pointLen)})
+	if err != nil {
+		ts.log.Error("response accept avl data failed", zap.Error(err))
+	}
 }
 
 func (ts *TeltonikaServer) ResponseDecline(conn net.Conn) {
-	conn.Write([]byte{0})
+	_, err := conn.Write([]byte{0})
+	if err != nil {
+		ts.log.Error("response decline ailed", zap.Error(err))
+	}
 }
 
 func (ts *TeltonikaServer) Stop() {
