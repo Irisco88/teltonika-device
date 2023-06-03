@@ -21,21 +21,21 @@ type Header struct {
 	NumberOfData uint8
 }
 
-func ParseHeader(data []byte) (*Header, error) {
+func ParseHeader(reader *bytes.Buffer) (*Header, error) {
 	header := &Header{}
-	preamble := binary.BigEndian.Uint32(data[0:4])
+	preamble := binary.BigEndian.Uint32(reader.Next(4))
 	if preamble != uint32(0) {
 		return nil, ErrInvalidPreamble
 	}
-	header.DataLength = binary.BigEndian.Uint32(data[4:8])
-	header.CodecID = data[8]
-	header.NumberOfData = data[9]
+	header.DataLength = binary.BigEndian.Uint32(reader.Next(4))
+	header.CodecID = reader.Next(1)[0]
+	header.NumberOfData = reader.Next(1)[0]
 	return header, nil
 }
 
 func ParsePacket(data []byte, imei string) ([]*pb.AVLData, error) {
 	reader := bytes.NewBuffer(data)
-	header, err := ParseHeader(reader.Next(10))
+	header, err := ParseHeader(reader)
 	if err != nil {
 		return nil, ErrInvalidHeader
 	}
@@ -92,29 +92,28 @@ func ParsePacket(data []byte, imei string) ([]*pb.AVLData, error) {
 				Satellites: int32(Satellites),
 			},
 		}
-		eventID, elements, err := ParseIOElements(reader.Bytes())
+		eventID, elements, err := ParseIOElements(reader)
 		if err != nil {
 			return nil, fmt.Errorf("parse io elements failed:%v", err)
 		}
 		points[i].IoElements = elements
 		points[i].EventId = uint32(eventID)
+
 	}
 	// Once finished with the records we read the Record Number and the CRC
-	_, err = streamToNumber[uint8](reader.Next(1)) // Number of Records
+	numberOfData2, err := streamToNumber[uint8](reader.Next(1)) // Number of Records
 	if err != nil {
 		return nil, err
 	}
-	//if numberOfData2 != header.NumberOfData {
-	//	return nil, ErrInvalidNumberOfData
-	//}
+	if numberOfData2 != header.NumberOfData {
+		return nil, ErrInvalidNumberOfData
+	}
 	_, err = streamToNumber[uint32](reader.Next(4)) // CRC
 
 	return points, nil
 }
 
-func ParseIOElements(data []byte) (eventID uint16, elements []*pb.IOElement, err error) {
-	// IO Events Elements
-	reader := bytes.NewBuffer(data)
+func ParseIOElements(reader *bytes.Buffer) (eventID uint16, elements []*pb.IOElement, err error) {
 	eventID, err = streamToNumber[uint16](reader.Next(2))
 	if err != nil {
 		return 0, nil, err
@@ -169,6 +168,7 @@ func ParseIOElements(data []byte) (eventID uint16, elements []*pb.IOElement, err
 			})
 		}
 	}
+	reader.Next(2) //nx
 	if len(elements) != int(totalElements) {
 		return 0, nil, ErrInvalidElementLen
 	}
