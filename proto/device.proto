@@ -6,7 +6,7 @@ option go_package = ".;pb";
 
 message AVLData {
   string imei = 1;
-  uint64 timestamp = 2;
+  uint64 timestamp = 2; //millisecond
   PacketPriority priority = 3;
   GPS gps = 4;
   repeated IOElement io_elements = 5;

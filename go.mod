@@ -12,11 +12,10 @@ require (
 )
 
 require (
-	github.com/basvdlei/gotsmart v0.0.3 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/filipkroca/b2n v0.0.0-20190805132448-22fb58c69d13 // indirect
-	github.com/filipkroca/teltonikaparser v0.0.0-20221014211009-24bbb6460c5e // indirect
+	github.com/google/go-cmp v0.5.8 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
