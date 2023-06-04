@@ -81,11 +81,12 @@ func ParseCodec8EPacket(reader *bytes.Buffer, header *Header, imei string) ([]*p
 		angle := int32(binary.BigEndian.Uint16(reader.Next(2)))
 		Satellites := int32(reader.Next(1)[0])
 		speed := int32(binary.BigEndian.Uint16(reader.Next(2)))
-
+		eventID := binary.BigEndian.Uint16(reader.Next(2))
 		points[i] = &pb.AVLData{
 			Imei:      imei,
 			Timestamp: timestamp,
 			Priority:  pb.PacketPriority(priority),
+			EventId:   uint32(eventID),
 			Gps: &pb.GPS{
 				Longitude:  float64(longitude),
 				Latitude:   float64(latitude),
@@ -95,21 +96,18 @@ func ParseCodec8EPacket(reader *bytes.Buffer, header *Header, imei string) ([]*p
 				Satellites: Satellites,
 			},
 		}
-		eventID, elements, err := ParseCodec8eIOElements(reader)
+		elements, err := ParseCodec8eIOElements(reader)
 		if err != nil {
 			return nil, fmt.Errorf("parse io elements failed:%v", err)
 		}
 		points[i].IoElements = elements
-		points[i].EventId = uint32(eventID)
 
 	}
 	return points, nil
 }
 
-func ParseCodec8eIOElements(reader *bytes.Buffer) (eventID uint16, elements []*pb.IOElement, err error) {
-	eventID = binary.BigEndian.Uint16(reader.Next(2))
+func ParseCodec8eIOElements(reader *bytes.Buffer) (elements []*pb.IOElement, err error) {
 	totalElements := binary.BigEndian.Uint16(reader.Next(2))
-
 	for stage := 1; stage <= 4; stage++ {
 		stageElements := binary.BigEndian.Uint16(reader.Next(2))
 
@@ -137,7 +135,7 @@ func ParseCodec8eIOElements(reader *bytes.Buffer) (eventID uint16, elements []*p
 	}
 	reader.Next(2) //nx
 	if len(elements) != int(totalElements) {
-		return 0, nil, ErrInvalidElementLen
+		return nil, ErrInvalidElementLen
 	}
-	return eventID, elements, nil
+	return elements, nil
 }
