@@ -29,6 +29,14 @@ func streamToNumber[T constraints.Integer | constraints.Float](data []byte) (T, 
 	return result, nil
 }
 
+func numberToStream(value any) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	if err := binary.Write(buf, binary.BigEndian, value); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
 func twosComplement(input int32) int32 {
 	mask := int32(math.Pow(2, 31))
 	return -(input & mask) + (input &^ mask)

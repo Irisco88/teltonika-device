@@ -1,26 +1,25 @@
 package parser
 
-type AVLData struct {
-	Imei       string         `json:"imei,omitempty"`
-	Timestamp  uint64         `json:"timestamp,omitempty"`
-	Priority   PacketPriority `json:"priority,omitempty"`
-	Gps        *GPS           `json:"gps,omitempty"`
-	IoElements []*IOElement   `json:"io_elements,omitempty"`
-	EventId    uint32         `json:"event_id,omitempty"`
-}
+import (
+	"encoding/binary"
+)
 
-type GPS struct {
-	Longitude  float64 `json:"longitude,omitempty"`
-	Latitude   float64 `json:"latitude,omitempty"`
-	Altitude   int32   `json:"altitude,omitempty"`
-	Angle      int32   `json:"angle,omitempty"`
-	Satellites int32   `json:"satellites,omitempty"`
-	Speed      int32   `json:"speed,omitempty"`
+type AVLData struct {
+	Timestamp  uint64
+	Priority   PacketPriority
+	Longitude  float64
+	Latitude   float64
+	Altitude   int16
+	Angle      uint16
+	Satellites uint8
+	Speed      uint16
+	EventID    uint16
+	IOElements []*IOElement
 }
 
 type IOElement struct {
-	ElementId int32 ` json:"element_id,omitempty"`
-	Value     int64 ` json:"value,omitempty"`
+	ID    uint16
+	Value any
 }
 
 type PacketPriority uint8
@@ -30,3 +29,81 @@ const (
 	priorityHigh  PacketPriority = 1
 	priorityPanic PacketPriority = 2
 )
+
+func MakeCodec8Packet(points []*AVLData) ([]byte, error) {
+	data := make([]byte, 0)
+	data = append(data, 0, 0, 0, 0)
+	avlDataBytes, err := EncodeCodec8ExtendedAVLData(points)
+	if err != nil {
+		return nil, err
+	}
+	data = binary.BigEndian.AppendUint32(data, uint32(len(avlDataBytes))+1)
+	data = append(data, 0x8e)
+	data = append(data, uint8(len(points)))
+	data = append(data, avlDataBytes...)
+	data = append(data, uint8(len(points)))
+	data = binary.BigEndian.AppendUint32(data, 0)
+	return data, nil
+}
+
+func EncodeCodec8ExtendedAVLData(points []*AVLData) ([]byte, error) {
+	var data []byte
+	for _, point := range points {
+		// Timestamp (4 bytes)
+		data = binary.BigEndian.AppendUint64(data, point.Timestamp)
+
+		// Priority (1 byte)
+		data = append(data, uint8(point.Priority))
+
+		// Longitude (8 bytes)
+		data = binary.BigEndian.AppendUint64(data, uint64(point.Longitude*1e6))
+
+		// Latitude (8 bytes)
+		data = binary.BigEndian.AppendUint64(data, uint64(point.Latitude*1e6))
+
+		// Altitude (2 bytes)
+		data = binary.BigEndian.AppendUint16(data, uint16(point.Altitude))
+
+		// Angle (2 bytes)
+		data = binary.BigEndian.AppendUint16(data, point.Angle)
+
+		// Satellites (1 byte)
+		data = append(data, point.Satellites)
+
+		// Speed (2 bytes)
+		data = binary.BigEndian.AppendUint16(data, point.Speed)
+
+		// event ID
+		data = binary.BigEndian.AppendUint16(data, point.EventID)
+
+		// IO Elements
+		data = binary.BigEndian.AppendUint16(data, uint16(len(point.IOElements)))
+		stageOne, stageTwo, stageThree, stageFour := make([]byte, 0), make([]byte, 0), make([]byte, 0), make([]byte, 0)
+		for _, element := range point.IOElements {
+			bytes, err := numberToStream(element.Value)
+			if err != nil {
+				return nil, err
+			}
+			switch len(bytes) {
+			case 1:
+				stageOne = binary.BigEndian.AppendUint16(stageOne, element.ID)
+				stageOne = append(stageOne, bytes...)
+			case 2:
+				stageTwo = binary.BigEndian.AppendUint16(stageTwo, element.ID)
+				stageTwo = append(stageTwo, bytes...)
+			case 4:
+				stageThree = binary.BigEndian.AppendUint16(stageThree, element.ID)
+				stageThree = append(stageThree, bytes...)
+			case 8:
+				stageFour = binary.BigEndian.AppendUint16(stageFour, element.ID)
+				stageFour = append(stageFour, bytes...)
+			}
+		}
+		data = append(data, stageOne...)
+		data = append(data, stageTwo...)
+		data = append(data, stageThree...)
+		data = append(data, stageFour...)
+		data = binary.BigEndian.AppendUint16(data, uint16(0))
+	}
+	return data, nil
+}
