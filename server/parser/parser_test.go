@@ -6,12 +6,15 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
 	"testing"
+	"time"
 )
 
 func TestParsePacket(t *testing.T) {
+	nowTime := uint64(time.Now().UnixMilli())
 	tests := map[string]struct {
 		imei       string
 		dataString string
+		points     []*AVLData
 		expected   []*pb.AVLData
 	}{
 		"success": {
@@ -29,14 +32,6 @@ func TestParsePacket(t *testing.T) {
 							Value:     1,
 						},
 						{
-							ElementId: 17,
-							Value:     29,
-						},
-						{
-							ElementId: 16,
-							Value:     22949000,
-						},
-						{
 							ElementId: 11,
 							Value:     893700218,
 						},
@@ -44,17 +39,77 @@ func TestParsePacket(t *testing.T) {
 							ElementId: 14,
 							Value:     500686954,
 						},
+						{
+							ElementId: 16,
+							Value:     22949000,
+						},
+						{
+							ElementId: 17,
+							Value:     29,
+						},
 					},
 					EventId: 1,
+				},
+			},
+		},
+		"success points": {
+			imei: "587414569874521",
+			points: []*AVLData{
+				{
+					Timestamp:  nowTime,
+					Priority:   priorityHigh,
+					Longitude:  -31.867449,
+					Latitude:   135.303686,
+					Altitude:   27,
+					Angle:      112,
+					Satellites: 32,
+					Speed:      120,
+					EventID:    36,
+					IOElements: []*IOElement{
+						{ID: 1, Value: uint32(500)},
+						{ID: 2, Value: true},
+						{ID: 3, Value: uint8(54)},
+					},
+				},
+			},
+			expected: []*pb.AVLData{
+				{
+					Imei:      "587414569874521",
+					Timestamp: nowTime,
+					Priority:  pb.PacketPriority_PACKET_PRIORITY_HIGH,
+					EventId:   36,
+					Gps: &pb.GPS{
+						Latitude:   135.303686,
+						Longitude:  -31.867449,
+						Speed:      120,
+						Altitude:   27,
+						Satellites: 32,
+						Angle:      112,
+					},
+					IoElements: []*pb.IOElement{
+						{ElementId: 1, Value: 500},
+						{ElementId: 2, Value: 1},
+						{ElementId: 3, Value: 54},
+					},
 				},
 			},
 		},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			dBytes, err := hex.DecodeString(test.dataString)
-			assert.NilError(t, err)
-			points, err := ParsePacket(dBytes, test.imei)
+			var (
+				e         error
+				dataBytes []byte
+			)
+
+			if len(test.dataString) > 0 {
+				dataBytes, e = hex.DecodeString(test.dataString)
+				assert.NilError(t, e)
+			} else {
+				dataBytes, e = MakeCodec8Packet(test.points)
+				assert.NilError(t, e)
+			}
+			points, err := ParsePacket(dataBytes, test.imei)
 			assert.NilError(t, err)
 			assert.Equal(t, len(points), len(test.expected))
 			assert.DeepEqual(t, points, test.expected, protocmp.Transform())
