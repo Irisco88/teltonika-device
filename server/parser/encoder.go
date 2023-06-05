@@ -42,24 +42,24 @@ func MakeCodec8Packet(points []*AVLData) ([]byte, error) {
 	data = append(data, uint8(len(points)))
 	data = append(data, avlDataBytes...)
 	data = append(data, uint8(len(points)))
-	data = binary.BigEndian.AppendUint32(data, 0)
+	data = binary.BigEndian.AppendUint32(data, 0) //crc16
 	return data, nil
 }
 
 func EncodeCodec8ExtendedAVLData(points []*AVLData) ([]byte, error) {
 	var data []byte
 	for _, point := range points {
-		// Timestamp (4 bytes)
+		// Timestamp (8 bytes)
 		data = binary.BigEndian.AppendUint64(data, point.Timestamp)
 
 		// Priority (1 byte)
 		data = append(data, uint8(point.Priority))
 
 		// Longitude (8 bytes)
-		data = binary.BigEndian.AppendUint64(data, uint64(point.Longitude*1e6))
+		data = binary.BigEndian.AppendUint32(data, uint32(point.Longitude*1e6))
 
-		// Latitude (8 bytes)
-		data = binary.BigEndian.AppendUint64(data, uint64(point.Latitude*1e6))
+		// Latitude (4 bytes)
+		data = binary.BigEndian.AppendUint32(data, uint32(point.Latitude*1e6))
 
 		// Altitude (2 bytes)
 		data = binary.BigEndian.AppendUint16(data, uint16(point.Altitude))
@@ -99,11 +99,15 @@ func EncodeCodec8ExtendedAVLData(points []*AVLData) ([]byte, error) {
 				stageFour = append(stageFour, bytes...)
 			}
 		}
+		data = binary.BigEndian.AppendUint16(data, uint16(len(stageOne)))
 		data = append(data, stageOne...)
+		data = binary.BigEndian.AppendUint16(data, uint16(len(stageTwo)/2))
 		data = append(data, stageTwo...)
+		data = binary.BigEndian.AppendUint16(data, uint16(len(stageThree)/4))
 		data = append(data, stageThree...)
+		data = binary.BigEndian.AppendUint16(data, uint16(len(stageFour)/8))
 		data = append(data, stageFour...)
-		data = binary.BigEndian.AppendUint16(data, uint16(0))
+		data = binary.BigEndian.AppendUint16(data, uint16(0)) //nx
 	}
 	return data, nil
 }

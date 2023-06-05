@@ -11,8 +11,8 @@ func TestEncodeAVLData(t *testing.T) {
 		point := &AVLData{
 			Timestamp:  uint64(time.Now().UnixMilli()),
 			Priority:   priorityHigh,
-			Longitude:  54.55,
-			Latitude:   451.65,
+			Longitude:  -31.867449,
+			Latitude:   135.303686,
 			Altitude:   451,
 			Angle:      654,
 			Satellites: 20,

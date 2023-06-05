@@ -17,6 +17,8 @@ var (
 	ErrUnsupportedCodec    = errors.New("codec not supported")
 )
 
+const PRECISION = 10000000.0
+
 type Header struct {
 	DataLength   uint32
 	CodecID      uint8
@@ -88,8 +90,8 @@ func parseCodec8EPacket(reader *bytes.Buffer, header *Header, imei string) ([]*p
 			Priority:  pb.PacketPriority(priority),
 			EventId:   uint32(eventID),
 			Gps: &pb.GPS{
-				Longitude:  float64(longitude),
-				Latitude:   float64(latitude),
+				Longitude:  float64(longitude) / PRECISION,
+				Latitude:   float64(latitude) / PRECISION,
 				Altitude:   altitude,
 				Angle:      angle,
 				Speed:      speed,
