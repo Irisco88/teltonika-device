@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/packetify/teltonika-device/proto/pb"
+	"golang.org/x/exp/slices"
 )
 
 var (
@@ -105,6 +106,9 @@ func parseCodec8EPacket(reader *bytes.Buffer, header *Header, imei string) ([]*p
 		points[i].IoElements = elements
 
 	}
+	slices.SortFunc(points, func(a, b *pb.AVLData) bool {
+		return a.Timestamp < b.Timestamp
+	})
 	return points, nil
 }
 
@@ -139,5 +143,8 @@ func parseCodec8eIOElements(reader *bytes.Buffer) (elements []*pb.IOElement, err
 	if len(elements) != int(totalElements) {
 		return nil, ErrInvalidElementLen
 	}
+	slices.SortFunc(elements, func(a, b *pb.IOElement) bool {
+		return a.ElementId < b.ElementId
+	})
 	return elements, nil
 }

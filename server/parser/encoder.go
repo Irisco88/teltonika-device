@@ -56,10 +56,10 @@ func EncodeCodec8ExtendedAVLData(points []*AVLData) ([]byte, error) {
 		data = append(data, uint8(point.Priority))
 
 		// Longitude (8 bytes)
-		data = binary.BigEndian.AppendUint32(data, uint32(point.Longitude*1e6))
+		data = binary.BigEndian.AppendUint32(data, uint32(point.Longitude*1e7))
 
 		// Latitude (4 bytes)
-		data = binary.BigEndian.AppendUint32(data, uint32(point.Latitude*1e6))
+		data = binary.BigEndian.AppendUint32(data, uint32(point.Latitude*1e7))
 
 		// Altitude (2 bytes)
 		data = binary.BigEndian.AppendUint16(data, uint16(point.Altitude))
@@ -114,7 +114,7 @@ func EncodeCodec8ExtendedAVLData(points []*AVLData) ([]byte, error) {
 		data = append(data, stageThree...)
 		data = binary.BigEndian.AppendUint16(data, stageCounts.stage4)
 		data = append(data, stageFour...)
+		data = binary.BigEndian.AppendUint16(data, uint16(0)) //nx
 	}
-	data = binary.BigEndian.AppendUint16(data, uint16(0)) //nx
 	return data, nil
 }
