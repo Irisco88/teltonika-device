@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+var (
+	ErrInvalidIMEI = errors.New("IMEI must be 15 characters long")
+)
+
 func streamToInt32(data []byte) (int32, error) {
 	var y int32
 	err := binary.Read(bytes.NewReader(data), binary.BigEndian, &y)
@@ -69,6 +73,14 @@ func DecodeIMEI(data []byte) (string, error) {
 		return "", fmt.Errorf("invalid imei length")
 	}
 	return imei, nil
+}
+
+func EncodeIMEIToHex(imei string) (string, error) {
+	if len(imei) != 15 {
+		return "", ErrInvalidIMEI
+	}
+	imeiHex := "000F" + hex.EncodeToString([]byte(imei))
+	return imeiHex, nil
 }
 
 func calculateCRC16(data []byte) uint16 {
