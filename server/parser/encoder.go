@@ -79,6 +79,9 @@ func EncodeCodec8ExtendedAVLData(points []*AVLData) ([]byte, error) {
 		// IO Elements
 		data = binary.BigEndian.AppendUint16(data, uint16(len(point.IOElements)))
 		stageOne, stageTwo, stageThree, stageFour := make([]byte, 0), make([]byte, 0), make([]byte, 0), make([]byte, 0)
+		stageCounts := struct {
+			stage1, stage2, stage3, stage4 uint16
+		}{}
 		for _, element := range point.IOElements {
 			bytes, err := numberToStream(element.Value)
 			if err != nil {
@@ -86,28 +89,32 @@ func EncodeCodec8ExtendedAVLData(points []*AVLData) ([]byte, error) {
 			}
 			switch len(bytes) {
 			case 1:
+				stageCounts.stage1++
 				stageOne = binary.BigEndian.AppendUint16(stageOne, element.ID)
 				stageOne = append(stageOne, bytes...)
 			case 2:
+				stageCounts.stage2++
 				stageTwo = binary.BigEndian.AppendUint16(stageTwo, element.ID)
 				stageTwo = append(stageTwo, bytes...)
 			case 4:
+				stageCounts.stage3++
 				stageThree = binary.BigEndian.AppendUint16(stageThree, element.ID)
 				stageThree = append(stageThree, bytes...)
 			case 8:
+				stageCounts.stage4++
 				stageFour = binary.BigEndian.AppendUint16(stageFour, element.ID)
 				stageFour = append(stageFour, bytes...)
 			}
 		}
-		data = binary.BigEndian.AppendUint16(data, uint16(len(stageOne)))
+		data = binary.BigEndian.AppendUint16(data, stageCounts.stage1)
 		data = append(data, stageOne...)
-		data = binary.BigEndian.AppendUint16(data, uint16(len(stageTwo)/2))
+		data = binary.BigEndian.AppendUint16(data, stageCounts.stage2)
 		data = append(data, stageTwo...)
-		data = binary.BigEndian.AppendUint16(data, uint16(len(stageThree)/4))
+		data = binary.BigEndian.AppendUint16(data, stageCounts.stage3)
 		data = append(data, stageThree...)
-		data = binary.BigEndian.AppendUint16(data, uint16(len(stageFour)/8))
+		data = binary.BigEndian.AppendUint16(data, stageCounts.stage4)
 		data = append(data, stageFour...)
-		data = binary.BigEndian.AppendUint16(data, uint16(0)) //nx
 	}
+	data = binary.BigEndian.AppendUint16(data, uint16(0)) //nx
 	return data, nil
 }

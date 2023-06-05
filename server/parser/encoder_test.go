@@ -20,7 +20,8 @@ func TestEncodeAVLData(t *testing.T) {
 			EventID:    451,
 			IOElements: []*IOElement{
 				{ID: 1, Value: uint32(500)},
-				//{ID: 3, Value: true},
+				{ID: 2, Value: true},
+				{ID: 3, Value: uint8(54)},
 			},
 		}
 		pointBytes, err := MakeCodec8Packet([]*AVLData{point})
