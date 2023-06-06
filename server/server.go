@@ -145,7 +145,12 @@ func (ts *TeltonikaServer) ResponseDecline(conn net.Conn) {
 }
 
 func (ts *TeltonikaServer) Stop() {
+	ts.log.Info("stopping server")
+	// Close the listener to stop accepting new connections
+	if ts.ln != nil {
+		ts.ln.Close()
+	}
+
+	close(ts.quitChan)
 	ts.wg.Wait()
-	ts.quitChan <- Empty{}
-	ts.log.Info("stop server")
 }
