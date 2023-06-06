@@ -22,7 +22,7 @@ func TestEncodeAVLData(t *testing.T) {
 			points: []*AVLData{
 				{
 					Timestamp:  nowTime,
-					Priority:   priorityHigh,
+					Priority:   PriorityHigh,
 					Longitude:  -31.867449,
 					Latitude:   135.303686,
 					Altitude:   27,
@@ -64,7 +64,7 @@ func TestEncodeAVLData(t *testing.T) {
 			points: []*AVLData{
 				{
 					Timestamp:  nowTime,
-					Priority:   priorityHigh,
+					Priority:   PriorityHigh,
 					Longitude:  -31.867449,
 					Latitude:   135.303686,
 					Altitude:   27,
@@ -80,7 +80,7 @@ func TestEncodeAVLData(t *testing.T) {
 				},
 				{
 					Timestamp:  twoHourLater,
-					Priority:   priorityLow,
+					Priority:   PriorityLow,
 					Longitude:  -20.867449,
 					Latitude:   60.303786,
 					Altitude:   36,

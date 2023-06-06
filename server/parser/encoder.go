@@ -25,9 +25,9 @@ type IOElement struct {
 type PacketPriority uint8
 
 const (
-	priorityLow   PacketPriority = 0
-	priorityHigh  PacketPriority = 1
-	priorityPanic PacketPriority = 2
+	PriorityLow   PacketPriority = 0
+	PriorityHigh  PacketPriority = 1
+	PriorityPanic PacketPriority = 2
 )
 
 func MakeCodec8Packet(points []*AVLData) ([]byte, error) {

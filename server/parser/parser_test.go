@@ -57,7 +57,7 @@ func TestParsePacket(t *testing.T) {
 			points: []*AVLData{
 				{
 					Timestamp:  nowTime,
-					Priority:   priorityHigh,
+					Priority:   PriorityHigh,
 					Longitude:  -31.867449,
 					Latitude:   135.303686,
 					Altitude:   27,
