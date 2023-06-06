@@ -64,14 +64,12 @@ func (ts *TeltonikaServer) acceptConnections() {
 			continue
 		}
 		ts.log.Info("new Connection to the server", zap.String("Address", conn.RemoteAddr().String()))
-		ts.wg.Add(1)
 		go ts.HandleConnection(conn)
 	}
 }
 
 func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 	defer conn.Close()
-	defer ts.wg.Done()
 	authenticated := false
 	var imei string
 	for {
