@@ -60,16 +60,22 @@ func (ts *TeltonikaServer) acceptConnections() {
 	for {
 		conn, err := ts.ln.Accept()
 		if err != nil {
-			ts.log.Error("accept connection error", zap.Error(err))
+			// Check if the error is due to the listener being closed
+			if opErr, ok := err.(*net.OpError); ok && opErr.Err.Error() == "use of closed network connection" {
+				return
+			}
+			ts.log.Error("failed to accept connection", zap.Error(err))
 			continue
 		}
 		ts.log.Info("new Connection to the server", zap.String("Address", conn.RemoteAddr().String()))
+		ts.wg.Add(1)
 		go ts.HandleConnection(conn)
 	}
 }
 
 func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 	defer conn.Close()
+	defer ts.wg.Done()
 	authenticated := false
 	var imei string
 	for {
@@ -150,7 +156,6 @@ func (ts *TeltonikaServer) Stop() {
 	if ts.ln != nil {
 		ts.ln.Close()
 	}
-
 	close(ts.quitChan)
 	ts.wg.Wait()
 }
