@@ -47,12 +47,14 @@ func TestEncodeIMEI(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			imeiHex, err := EncodeIMEIToHex(test.imei)
+			imeiBytes, err := EncodeIMEIToHex(test.imei)
 			if test.errWant != nil {
 				assert.ErrorIs(t, err, test.errWant)
 			} else {
 				assert.NilError(t, err)
-				assert.Equal(t, imeiHex, test.imeiHex)
+				imei, err := DecodeIMEI(imeiBytes)
+				assert.NilError(t, err)
+				assert.Equal(t, imei, test.imei)
 			}
 		})
 	}

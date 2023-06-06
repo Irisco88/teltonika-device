@@ -75,12 +75,16 @@ func DecodeIMEI(data []byte) (string, error) {
 	return imei, nil
 }
 
-func EncodeIMEIToHex(imei string) (string, error) {
+func EncodeIMEIToHex(imei string) ([]byte, error) {
 	if len(imei) != 15 {
-		return "", ErrInvalidIMEI
+		return nil, ErrInvalidIMEI
 	}
 	imeiHex := "000F" + hex.EncodeToString([]byte(imei))
-	return imeiHex, nil
+	imeiBytes, err := hex.DecodeString(imeiHex)
+	if err != nil {
+		return nil, err
+	}
+	return imeiBytes, nil
 }
 
 func calculateCRC16(data []byte) uint16 {
