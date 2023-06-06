@@ -117,9 +117,10 @@ func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 func (ts *TeltonikaServer) LogPoints(points []*pb.AVLData) {
 	for _, p := range points {
 		ts.log.Info("new packet",
+			zap.String("Priority", p.Priority.String()),
 			zap.String("IMEI", p.GetImei()),
-			zap.Uint64("timestamp", p.GetTimestamp()),
-			zap.Any("gps", p.GetGps()),
+			zap.Uint64("Timestamp", p.GetTimestamp()),
+			zap.Any("Gps", p.GetGps()),
 			zap.Any("IOElements", p.GetIoElements()),
 		)
 	}
