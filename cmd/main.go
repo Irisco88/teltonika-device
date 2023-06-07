@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/nats-io/nats.go"
 	"github.com/packetify/teltonika-device/server"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
@@ -15,6 +16,7 @@ import (
 var (
 	HostAddress string
 	PortNumber  uint
+	NatsAddr    string
 )
 
 func main() {
@@ -48,11 +50,23 @@ func main() {
 						Destination: &PortNumber,
 						EnvVars:     []string{"PORT"},
 					},
+					&cli.StringFlag{
+						Name:        "nats",
+						Usage:       "nats Address",
+						Value:       "127.0.0.1:4222",
+						DefaultText: "127.0.0.1:4222",
+						Destination: &NatsAddr,
+						EnvVars:     []string{"NATS"},
+						Required:    true,
+					},
 				},
 				Action: func(ctx *cli.Context) error {
 					listenAddr := net.JoinHostPort(HostAddress, fmt.Sprintf("%d", PortNumber))
-
-					s := server.NewServer(listenAddr, logger)
+					natsCon, err := nats.Connect(NatsAddr)
+					if err != nil {
+						return err
+					}
+					s := server.NewServer(listenAddr, logger, natsCon)
 					go s.Start()
 
 					sigs := make(chan os.Signal, 1)

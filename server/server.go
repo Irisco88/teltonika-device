@@ -2,9 +2,12 @@ package server
 
 import (
 	"errors"
+	"fmt"
+	"github.com/nats-io/nats.go"
 	"github.com/packetify/teltonika-device/proto/pb"
 	"github.com/packetify/teltonika-device/server/parser"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 	"io"
 	"net"
 	"sync"
@@ -18,6 +21,7 @@ type TeltonikaServer struct {
 	quitChan   chan Empty
 	wg         sync.WaitGroup
 	log        *zap.Logger
+	natsConn   *nats.Conn
 }
 
 const PRECISION = 10000000.0
@@ -31,12 +35,13 @@ var (
 	_ TcpServerInterface = &TeltonikaServer{}
 )
 
-func NewServer(listenAddr string, logger *zap.Logger) TcpServerInterface {
+func NewServer(listenAddr string, logger *zap.Logger, natsConn *nats.Conn) TcpServerInterface {
 	return &TeltonikaServer{
 		listenAddr: listenAddr,
 		quitChan:   make(chan Empty),
 		wg:         sync.WaitGroup{},
 		log:        logger,
+		natsConn:   natsConn,
 	}
 }
 
@@ -113,8 +118,24 @@ func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 			)
 			return
 		}
-		go ts.LogPoints(points)
+		go func() {
+			ts.LogPoints(points)
+			ts.PublishLastPoint(imei, points)
+		}()
+
 		ts.ResponseAcceptDataPack(conn, len(points))
+	}
+}
+
+func (ts *TeltonikaServer) PublishLastPoint(imei string, points []*pb.AVLData) {
+	subject := fmt.Sprintf("device.lastpoint.%s", imei)
+	lastPointByte, err := proto.Marshal(points[len(points)-1])
+	if err != nil {
+		ts.log.Error("marshal last point failed", zap.Error(err))
+		return
+	}
+	if e := ts.natsConn.Publish(subject, lastPointByte); e != nil {
+		ts.log.Error("publish last point failed", zap.Error(e))
 	}
 }
 

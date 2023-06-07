@@ -11,7 +11,8 @@ import (
 
 func TestSendData(t *testing.T) {
 	nowTime := uint64(time.Now().UnixMilli())
-
+	natsServer := RunNatsServerOnPort(0)
+	defer natsServer.Shutdown()
 	tests := map[string]struct {
 		imei   string
 		points []*parser.AVLData
@@ -43,7 +44,8 @@ func TestSendData(t *testing.T) {
 			clientConn, serverConn := net.Pipe()
 
 			logger, _ := zap.NewDevelopment()
-			server := NewServer(serverConn.LocalAddr().String(), logger).(*TeltonikaServer)
+			natsClient := NewNatsConnection(t, natsServer.ClientURL())
+			server := NewServer(serverConn.LocalAddr().String(), logger, natsClient).(*TeltonikaServer)
 			go func() {
 				server.wg.Add(1)
 				server.HandleConnection(serverConn)
