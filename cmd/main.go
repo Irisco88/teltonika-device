@@ -45,7 +45,7 @@ func main() {
 						Name:        "port",
 						Usage:       "server port number",
 						Value:       5000,
-						DefaultText: "50000",
+						DefaultText: "5000",
 						Aliases:     []string{"p"},
 						Destination: &PortNumber,
 						EnvVars:     []string{"PORT"},

@@ -1,0 +1,58 @@
+version: "3.8"
+services:
+  clickhousedb:
+    image: clickhouse/clickhouse-server:latest
+    container_name: teltonika-clickhouse
+    ports:
+      - ${CH_HTTP_PORT:-8123}:8123
+      - ${CH_PORT:-9000}:9000
+    networks:
+      - netonika
+    volumes:
+      - clickhouse-volume:/var/lib/clickhouse
+    environment:
+      CLICKHOUSE_USER: ${CH_USER:-admin}
+      CLICKHOUSE_PASSWORD: ${CH_PASSWORD:-12345678}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+      CLICKHOUSE_DB: ${CH_DB:-default}
+    healthcheck:
+      test: [ "CMD","wget","-q","clickhousedb:8123/ping" ]
+      interval: 3s
+      timeout: 45s
+      retries: 15
+    mem_limit: 2G
+    mem_reservation: 1G
+
+  nats:
+    image: nats:latest
+    container_name: teltonika-nats
+    ports:
+      - ${NATS_PORT:-4222}:4222
+      - ${NATS_HTTP_PORT:-8222}:8222
+    networks:
+      - netonika
+
+  teltonika-device:
+    image: teltonikadevice:latest
+    container_name: teltonika-device
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GO_VERSION: "1.20"
+    ports:
+      - ${DEVICE_SRV_PORT:-6060}:3000
+    environment:
+      NATS: "nats:4222"
+    command: [ "start", "-p", "3000" ]
+    networks:
+      - netonika
+    depends_on:
+      - clickhousedb
+    restart: always
+
+networks:
+  netonika:
+    driver: bridge
+volumes:
+  clickhouse-volume:
