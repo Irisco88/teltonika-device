@@ -3,7 +3,7 @@ package main
 import (
 	"embed"
 	"fmt"
-	_ "github.com/ClickHouse/clickhouse-go"
+	_ "github.com/ClickHouse/clickhouse-go/v2"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/packetify/avldb/migrations/golang"
 	"github.com/pressly/goose/v3"
