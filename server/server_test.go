@@ -1,8 +1,14 @@
 package server
 
 import (
+	"context"
+	"github.com/golang/mock/gomock"
+	mockdb "github.com/packetify/teltonika-device/db/clickhouse/mock_db"
 	"github.com/packetify/teltonika-device/server/parser"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zaptest/observer"
+	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
 	"net"
 	"testing"
@@ -14,8 +20,12 @@ func TestSendData(t *testing.T) {
 	natsServer := RunNatsServerOnPort(0)
 	defer natsServer.Shutdown()
 	tests := map[string]struct {
-		imei   string
-		points []*parser.AVLData
+		imei       string
+		points     []*parser.AVLData
+		MockDB     func(ctx context.Context, dbConn *mockdb.MockAVLDBConn)
+		logEntry   []*zapcore.Entry
+		logContext []map[string]interface{}
+		errWant    error
 	}{
 		"success": {
 			imei: "356478954125698",
@@ -43,29 +53,27 @@ func TestSendData(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			clientConn, serverConn := net.Pipe()
 
-			logger, _ := zap.NewDevelopment()
+			ctrl := gomock.NewController(t)
+			dbConn := mockdb.NewMockAVLDBConn(ctrl)
+
+			observerlog, out := observer.New(zap.InfoLevel)
+			logger := zap.New(observerlog)
+
 			natsClient := NewNatsConnection(t, natsServer.ClientURL())
-			server := NewServer(serverConn.LocalAddr().String(), logger, natsClient).(*TeltonikaServer)
+			server := NewServer(serverConn.LocalAddr().String(), logger, natsClient, dbConn).(*TeltonikaServer)
 			go func() {
 				server.wg.Add(1)
 				server.HandleConnection(serverConn)
 			}()
-
-			imeiBytes, err := parser.EncodeIMEIToHex(test.imei)
-			assert.NilError(t, err)
-			_, err = clientConn.Write(imeiBytes)
-			assert.NilError(t, err)
-			buf := make([]byte, 2048)
-			_, err = clientConn.Read(buf)
-			assert.NilError(t, err)
-			assert.DeepEqual(t, buf[:1], []byte{1})
-			packetBytes, err := parser.MakeCodec8Packet(test.points)
-			assert.NilError(t, err)
-			_, err = clientConn.Write(packetBytes)
-			assert.NilError(t, err)
-			_, err = clientConn.Read(buf)
-			assert.NilError(t, err)
-			assert.DeepEqual(t, buf[:4], []byte{0, 0, 0, uint8(len(test.points))})
+			ImeiAuthenticate(t, clientConn, test.imei)
+			SendPoints(t, clientConn, test.points)
+			logs := out.TakeAll()
+			assert.Assert(t, len(logs) == len(test.logEntry))
+			for i, log := range logs {
+				assert.Assert(t, log.Level == test.logEntry[i].Level)
+				assert.Equal(t, log.Message, test.logEntry[i].Message)
+				assert.DeepEqual(t, log.ContextMap(), test.logContext[i], protocmp.Transform())
+			}
 		})
 	}
 }

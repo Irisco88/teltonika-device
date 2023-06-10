@@ -1,9 +1,11 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/nats-io/nats.go"
+	avldb "github.com/packetify/teltonika-device/db/clickhouse"
 	"github.com/packetify/teltonika-device/proto/pb"
 	"github.com/packetify/teltonika-device/server/parser"
 	"go.uber.org/zap"
@@ -22,6 +24,7 @@ type TeltonikaServer struct {
 	wg         sync.WaitGroup
 	log        *zap.Logger
 	natsConn   *nats.Conn
+	avlDB      avldb.AVLDBConn
 }
 
 const PRECISION = 10000000.0
@@ -29,19 +32,25 @@ const PRECISION = 10000000.0
 type TcpServerInterface interface {
 	Start()
 	Stop()
+	AcceptConnections()
+	HandleConnection(conn net.Conn)
 }
 
 var (
 	_ TcpServerInterface = &TeltonikaServer{}
 )
 
-func NewServer(listenAddr string, logger *zap.Logger, natsConn *nats.Conn) TcpServerInterface {
+func NewServer(listenAddr string,
+	logger *zap.Logger,
+	natsConn *nats.Conn,
+	avlDB avldb.AVLDBConn) TcpServerInterface {
 	return &TeltonikaServer{
 		listenAddr: listenAddr,
 		quitChan:   make(chan Empty),
 		wg:         sync.WaitGroup{},
 		log:        logger,
 		natsConn:   natsConn,
+		avlDB:      avlDB,
 	}
 }
 
@@ -54,14 +63,14 @@ func (ts *TeltonikaServer) Start() {
 	defer ln.Close()
 	ts.ln = ln
 
-	go ts.acceptConnections()
+	go ts.AcceptConnections()
 	ts.log.Info("server started",
 		zap.String("ListenAddress", ts.listenAddr),
 	)
 	<-ts.quitChan
 }
 
-func (ts *TeltonikaServer) acceptConnections() {
+func (ts *TeltonikaServer) AcceptConnections() {
 	for {
 		conn, err := ts.ln.Accept()
 		if err != nil {
@@ -121,6 +130,9 @@ func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 		go func() {
 			ts.LogPoints(points)
 			ts.PublishLastPoint(imei, points)
+			if e := ts.avlDB.SaveAvlPoints(context.Background(), points); e != nil {
+				ts.log.Error("failed to save avl points", zap.Error(e))
+			}
 		}()
 
 		ts.ResponseAcceptDataPack(conn, len(points))

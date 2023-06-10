@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/nats-io/nats.go"
+	avldb "github.com/packetify/teltonika-device/db/clickhouse"
 	"github.com/packetify/teltonika-device/server"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
@@ -14,9 +15,10 @@ import (
 )
 
 var (
-	HostAddress string
-	PortNumber  uint
-	NatsAddr    string
+	HostAddress     string
+	PortNumber      uint
+	NatsAddr        string
+	AVLDBClickhouse string
 )
 
 func main() {
@@ -59,6 +61,15 @@ func main() {
 						EnvVars:     []string{"NATS"},
 						Required:    true,
 					},
+					&cli.StringFlag{
+						Name:        "avldb",
+						Usage:       "avldb clickhouse url",
+						Value:       "clickhouse://admin:password@127.0.0.1:9423/default?dial_timeout=200ms",
+						DefaultText: "clickhouse://admin:password@127.0.0.1:9423/default?dial_timeout=200ms",
+						Destination: &AVLDBClickhouse,
+						EnvVars:     []string{"AVLDB_CLICKHOUSE"},
+						Required:    true,
+					},
 				},
 				Action: func(ctx *cli.Context) error {
 					listenAddr := net.JoinHostPort(HostAddress, fmt.Sprintf("%d", PortNumber))
@@ -66,7 +77,12 @@ func main() {
 					if err != nil {
 						return err
 					}
-					s := server.NewServer(listenAddr, logger, natsCon)
+					avlClickhouseDB, err := avldb.ConnectAvlDB(AVLDBClickhouse)
+					if err != nil {
+						return err
+					}
+
+					s := server.NewServer(listenAddr, logger, natsCon, avlClickhouseDB)
 					go s.Start()
 
 					sigs := make(chan os.Signal, 1)
