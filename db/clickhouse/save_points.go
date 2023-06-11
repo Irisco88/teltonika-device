@@ -6,20 +6,6 @@ import (
 	"time"
 )
 
-type AVLPointColumns struct {
-	Imei       string
-	Timestamp  time.Time
-	Priority   string
-	Longitude  float64
-	Latitude   float64
-	Altitude   int16
-	Angle      int16
-	Satellites uint8
-	Speed      int16
-	IOElements map[uint16]int64
-	EventID    uint16
-}
-
 const insertAvlPointQuery = `
 	INSERT INTO 
 	    avlpoints(imei, timestamp, priority, longitude, latitude, altitude, angle, satellites, speed,event_id, io_elements)
@@ -38,19 +24,19 @@ func (adb *AVLDataBase) SaveAvlPoints(ctx context.Context, points []*pb.AVLData)
 		for _, element := range point.IoElements {
 			elementMap[uint16(element.ElementId)] = element.Value
 		}
-		err := batch.AppendStruct(&AVLPointColumns{
-			Imei:       point.GetImei(),
-			Timestamp:  time.UnixMilli(int64(point.GetTimestamp())),
-			Priority:   point.Priority.String(),
-			Longitude:  gps.GetLongitude(),
-			Latitude:   gps.GetLatitude(),
-			Altitude:   int16(gps.GetAltitude()),
-			Angle:      int16(gps.GetAngle()),
-			Satellites: uint8(gps.GetSatellites()),
-			Speed:      int16(gps.GetSpeed()),
-			EventID:    uint16(point.GetEventId()),
-			IOElements: elementMap,
-		})
+		err := batch.Append(
+			point.GetImei(),
+			time.UnixMilli(int64(point.GetTimestamp())),
+			point.Priority.String(),
+			gps.GetLongitude(),
+			gps.GetLatitude(),
+			int16(gps.GetAltitude()),
+			int16(gps.GetAngle()),
+			uint8(gps.GetSatellites()),
+			int16(gps.GetSpeed()),
+			uint16(point.GetEventId()),
+			elementMap,
+		)
 		if err != nil {
 			return err
 		}

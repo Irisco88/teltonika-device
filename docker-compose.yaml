@@ -44,6 +44,7 @@ services:
       - ${DEVICE_SRV_PORT:-6060}:3000
     environment:
       NATS: "nats:4222"
+      AVLDB_CLICKHOUSE: clickhouse://${CH_USER:-admin}:${CH_PASSWORD:-12345678}@clickhousedb:9000/default?dial_timeout=200ms&max_execution_time=60
     command: [ "start", "-p", "3000" ]
     networks:
       - netonika
