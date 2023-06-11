@@ -7,7 +7,7 @@ import (
 )
 
 type AVLPointColumns struct {
-	IMEI       string
+	Imei       string
 	Timestamp  time.Time
 	Priority   string
 	Longitude  float64
@@ -39,12 +39,13 @@ func (adb *AVLDataBase) SaveAvlPoints(ctx context.Context, points []*pb.AVLData)
 			elementMap[uint16(element.ElementId)] = element.Value
 		}
 		err := batch.AppendStruct(&AVLPointColumns{
-			IMEI:       point.GetImei(),
+			Imei:       point.GetImei(),
 			Timestamp:  time.UnixMilli(int64(point.GetTimestamp())),
 			Priority:   point.Priority.String(),
 			Longitude:  gps.GetLongitude(),
 			Latitude:   gps.GetLatitude(),
 			Altitude:   int16(gps.GetAltitude()),
+			Angle:      int16(gps.GetAngle()),
 			Satellites: uint8(gps.GetSatellites()),
 			Speed:      int16(gps.GetSpeed()),
 			EventID:    uint16(point.GetEventId()),
