@@ -50,6 +50,7 @@ services:
       - netonika
     depends_on:
       - clickhousedb
+      - nats
     restart: always
 
 networks:
