@@ -33,6 +33,23 @@ enum PacketPriority {
   PACKET_PRIORITY_PANIC = 2;
 }
 ```
+## Avl Database
+the schema of `avldb` is shwon below
+
+| Column Name | Data Type                        |
+|-------------|----------------------------------|
+| imei        | String                           |
+| timestamp   | DateTime64(3)                    |
+| priority    | Enum8('PACKET_PRIORITY_LOW' = 0, 'PACKET_PRIORITY_HIGH' = 1, 'PACKET_PRIORITY_PANIC' = 2) |
+| longitude   | Float64                          |
+| latitude    | Float64                          |
+| altitude    | Int16                            |
+| angle       | Int16                            |
+| satellites  | UInt8                            |
+| speed       | Int16                            |
+| io_elements | Map(UInt16, Int64)               |
+| event_id    | UInt16                           |
+
 ## Build
 ```sh
 just build
