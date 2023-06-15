@@ -65,8 +65,10 @@ services:
     networks:
       - netonika
     depends_on:
-      - clickhousedb
-      - nats
+      clickhousedb:
+        condition: service_started
+      nats:
+        condition: service_started
     restart: always
 
 networks:
