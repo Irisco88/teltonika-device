@@ -35,7 +35,8 @@ services:
       DATABASE_URL: clickhouse://${CH_USER:-admin}:${CH_PASSWORD:-12345678}@clickhousedb:9000/default
     command: [ "up" ]
     depends_on:
-      - clickhousedb
+      clickhousedb:
+        condition: service_started
     networks:
       - netonika
 
