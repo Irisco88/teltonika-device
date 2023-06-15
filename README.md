@@ -1,7 +1,7 @@
 # teltonika device service
 teltonika device service includes a `parser` to parse teltonika packets in `codec8 extended` protocol on `tcp` connection. this device service decodes `avl` data packets and saves all received points to a time serries database which in this case is `clickhouse`. it also publishes decoded points on nats subjects for each device using their `imei` 
 
-### Avl data structure
+## Avl data structure
 this is avl point structure in `protobuf` format
 ```protobuf
 message AVLData {
@@ -33,17 +33,17 @@ enum PacketPriority {
   PACKET_PRIORITY_PANIC = 2;
 }
 ```
-### Build
+## Build
 ```sh
 just build
 just upx #build and compress binary
 ```
-### Deploy
+## Deploy
 deploy device service and its dependencies using provided docker compose file.
 ```sh
 just dcompose-up
 ```
-### TODO
+## TODO
 + save rawdata
 - add grpc api to get `points` history
 + add grpc api to get `last-points`
