@@ -9,7 +9,7 @@ RUN apk --no-cache add --update ca-certificates tzdata
 
 # copy source code
 WORKDIR /build
-COPY migrations .
+COPY . .
 
 # Get all of our dependencies
 ARG GOPROXYURL

@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.9"
 services:
   clickhousedb:
     image: clickhouse/clickhouse-server:latest
@@ -23,6 +23,22 @@ services:
     mem_limit: 2G
     mem_reservation: 1G
 
+  avldb-migrations:
+    image: avldb/migrations:latest
+    container_name: avldb-migrations
+    build:
+      context: ./avldb
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_DRIVER: clickhouse
+      MIGRATIONS_PATH: migrations/sqls
+      DATABASE_URL: clickhouse://${CH_USER:-admin}:${CH_PASSWORD:-12345678}@clickhousedb:9000/default
+    command: [ "up" ]
+    depends_on:
+      - clickhousedb
+    networks:
+      - netonika
+
   nats:
     image: nats:latest
     container_name: teltonika-nats
@@ -44,7 +60,7 @@ services:
       - ${DEVICE_SRV_PORT:-6060}:3000
     environment:
       NATS: "nats:4222"
-      AVLDB_CLICKHOUSE: clickhouse://${CH_USER:-admin}:${CH_PASSWORD:-12345678}@clickhousedb:9000/default?dial_timeout=200ms&max_execution_time=60
+      AVLDB_CLICKHOUSE: "clickhouse://${CH_USER:-admin}:${CH_PASSWORD:-12345678}@clickhousedb:9000/default?dial_timeout=200ms&max_execution_time=60"
     command: [ "start", "-p", "3000" ]
     networks:
       - netonika
