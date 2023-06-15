@@ -36,7 +36,7 @@ services:
     command: [ "up" ]
     depends_on:
       clickhousedb:
-        condition: service_started
+        condition: service_healthy
     networks:
       - netonika
 
@@ -67,9 +67,11 @@ services:
       - netonika
     depends_on:
       clickhousedb:
-        condition: service_started
+        condition: service_healthy
       nats:
         condition: service_started
+      avldb-migrations:
+        condition: service_completed_successfully
     restart: always
 
 networks:
