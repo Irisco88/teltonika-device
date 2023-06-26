@@ -1,11 +1,12 @@
 package parser
 
 import (
+	"testing"
+	"time"
+
 	"github.com/openfms/teltonika-device/proto/pb"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
-	"testing"
-	"time"
 )
 
 func TestEncodeAVLData(t *testing.T) {

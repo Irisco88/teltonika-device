@@ -4,15 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/nats-io/nats.go"
-	avldb "github.com/openfms/teltonika-device/db/clickhouse"
-	"github.com/openfms/teltonika-device/proto/pb"
-	"github.com/openfms/teltonika-device/server/parser"
-	"go.uber.org/zap"
-	"google.golang.org/protobuf/proto"
 	"io"
 	"net"
 	"sync"
+
+	"github.com/nats-io/nats.go"
+	pb "github.com/openfms/protos/gen/go/device/v1"
+	avldb "github.com/openfms/teltonika-device/db/clickhouse"
+	"github.com/openfms/teltonika-device/server/parser"
+	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 )
 
 type Empty struct{}

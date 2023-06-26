@@ -6,10 +6,11 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"golang.org/x/exp/constraints"
 	"math"
 	"strconv"
 	"time"
+
+	"golang.org/x/exp/constraints"
 )
 
 var (

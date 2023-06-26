@@ -5,7 +5,8 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/openfms/teltonika-device/proto/pb"
+
+	pb "github.com/openfms/protos/gen/go/device/v1"
 	"golang.org/x/exp/slices"
 )
 

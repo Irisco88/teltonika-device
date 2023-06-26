@@ -2,6 +2,10 @@ package server
 
 import (
 	"context"
+	"net"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	mockdb "github.com/openfms/teltonika-device/db/clickhouse/mock_db"
 	"github.com/openfms/teltonika-device/server/parser"
@@ -10,9 +14,6 @@ import (
 	"go.uber.org/zap/zaptest/observer"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
-	"net"
-	"testing"
-	"time"
 )
 
 func TestSendData(t *testing.T) {

@@ -2,11 +2,12 @@ package clickhouse
 
 import (
 	"context"
-	"github.com/openfms/teltonika-device/proto/pb"
-	"gotest.tools/v3/assert"
 	"os"
 	"testing"
 	"time"
+
+	pb "github.com/openfms/protos/gen/go/device/v1"
+	"gotest.tools/v3/assert"
 )
 
 func NewConnTest(t *testing.T) AVLDBConn {

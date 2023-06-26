@@ -2,8 +2,9 @@ package clickhouse
 
 import (
 	"context"
-	"github.com/openfms/teltonika-device/proto/pb"
 	"time"
+
+	pb "github.com/openfms/protos/gen/go/device/v1"
 )
 
 const insertAvlPointQuery = `

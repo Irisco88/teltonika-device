@@ -2,8 +2,9 @@ package parser
 
 import (
 	"encoding/hex"
-	"gotest.tools/v3/assert"
 	"testing"
+
+	"gotest.tools/v3/assert"
 )
 
 func TestDecodeIMEI(t *testing.T) {
