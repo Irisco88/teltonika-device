@@ -10,7 +10,7 @@ import (
 
 	driver "github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	gomock "github.com/golang/mock/gomock"
-	pb "github.com/openfms/teltonika-device/proto/pb"
+	devicev1 "github.com/openfms/protos/gen/go/device/v1"
 )
 
 // MockAVLDBConn is a mock of AVLDBConn interface.
@@ -51,7 +51,7 @@ func (mr *MockAVLDBConnMockRecorder) GetConn() *gomock.Call {
 }
 
 // SaveAvlPoints mocks base method.
-func (m *MockAVLDBConn) SaveAvlPoints(ctx context.Context, points []*pb.AVLData) error {
+func (m *MockAVLDBConn) SaveAvlPoints(ctx context.Context, points []*devicev1.AVLData) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveAvlPoints", ctx, points)
 	ret0, _ := ret[0].(error)
