@@ -22,6 +22,7 @@ proto:
     @echo "generate proto..."
     @cd proto && buf generate && cd -
 
+# build and compress binary
 upx: build
     upx --best --lzma bin/teltonikasrv
 
@@ -39,3 +40,7 @@ dcompose-stop:
 # down and clean all compose file containers
 dcompose-clean:
     docker compose -f {{composeFile}} --env-file {{composeEnvFile}} down --volumes --remove-orphans --rmi local
+
+#build docker image
+image tag:
+    docker buildx build --build-arg GITHUB_TOKEN="$GITHUB_TOKEN" --tag {{tag}} .
