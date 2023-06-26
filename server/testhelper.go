@@ -5,7 +5,7 @@ import (
 	"github.com/nats-io/nats-server/v2/server"
 	natstest "github.com/nats-io/nats-server/v2/test"
 	"github.com/nats-io/nats.go"
-	"github.com/packetify/teltonika-device/server/parser"
+	"github.com/openfms/teltonika-device/server/parser"
 	"gotest.tools/v3/assert"
 	"math/rand"
 	"net"

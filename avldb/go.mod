@@ -1,4 +1,4 @@
-module github.com/packetify/avldb
+module github.com/openfms/avldb
 
 go 1.20
 

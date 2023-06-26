@@ -3,8 +3,8 @@ package server
 import (
 	"context"
 	"github.com/golang/mock/gomock"
-	mockdb "github.com/packetify/teltonika-device/db/clickhouse/mock_db"
-	"github.com/packetify/teltonika-device/server/parser"
+	mockdb "github.com/openfms/teltonika-device/db/clickhouse/mock_db"
+	"github.com/openfms/teltonika-device/server/parser"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"

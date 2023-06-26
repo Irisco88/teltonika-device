@@ -2,7 +2,7 @@ package clickhouse
 
 import (
 	"context"
-	"github.com/packetify/teltonika-device/proto/pb"
+	"github.com/openfms/teltonika-device/proto/pb"
 	"gotest.tools/v3/assert"
 	"os"
 	"testing"

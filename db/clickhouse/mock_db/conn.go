@@ -10,7 +10,7 @@ import (
 
 	driver "github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	gomock "github.com/golang/mock/gomock"
-	pb "github.com/packetify/teltonika-device/proto/pb"
+	pb "github.com/openfms/teltonika-device/proto/pb"
 )
 
 // MockAVLDBConn is a mock of AVLDBConn interface.

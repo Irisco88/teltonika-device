@@ -2,7 +2,7 @@ package parser
 
 import (
 	"encoding/hex"
-	"github.com/packetify/teltonika-device/proto/pb"
+	"github.com/openfms/teltonika-device/proto/pb"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
 	"testing"

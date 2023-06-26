@@ -5,7 +5,7 @@ import (
 	"fmt"
 	_ "github.com/ClickHouse/clickhouse-go/v2"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	_ "github.com/packetify/avldb/migrations/golang"
+	_ "github.com/openfms/avldb/migrations/golang"
 	"github.com/pressly/goose/v3"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/exp/slices"

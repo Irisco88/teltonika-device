@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	"github.com/packetify/teltonika-device/proto/pb"
+	"github.com/openfms/teltonika-device/proto/pb"
 	"net"
 	"time"
 )

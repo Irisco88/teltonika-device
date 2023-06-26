@@ -1,4 +1,4 @@
-module github.com/packetify/teltonika-device
+module github.com/openfms/teltonika-device
 
 go 1.20
 

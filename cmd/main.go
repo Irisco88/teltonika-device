@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/nats-io/nats.go"
-	avldb "github.com/packetify/teltonika-device/db/clickhouse"
-	"github.com/packetify/teltonika-device/server"
+	avldb "github.com/openfms/teltonika-device/db/clickhouse"
+	"github.com/openfms/teltonika-device/server"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"log"
