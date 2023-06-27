@@ -29,7 +29,7 @@ RUN --mount=type=cache,mode=0755,target=/go/pkg/mod CGO_ENABLED=0 GOOS=linux GOA
 
 ARG COMPRESS
 RUN mkdir -p /final && \
-    if [ "$COMPRESS" = "true" ] ;then upx --best --lzma -o /final/teltonikadevice ./bin/teltonikadevice ;else cp ./bin/release/teltonikadevice /final; fi
+    if [ "$COMPRESS" = "true" ] ;then upx --best --lzma -o /final/teltonikadevice ./bin/teltonikadevice ;else cp ./bin/teltonikadevice /final; fi
 
 FROM scratch AS final
 

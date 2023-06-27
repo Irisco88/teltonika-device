@@ -8,7 +8,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/nats-io/nats-server/v2 v2.9.17
 	github.com/nats-io/nats.go v1.26.0
-	github.com/openfms/protos v0.0.0-20230626094522-a732ab7f8d13
+	github.com/openfms/protos v0.0.0-20230627132904-cc1518615f5f
 	github.com/urfave/cli/v2 v2.25.3
 	go.uber.org/zap v1.24.0
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1

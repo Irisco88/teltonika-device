@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	pb "github.com/openfms/protos/gen/go/device/v1"
+	pb "github.com/openfms/protos/gen/device/v1"
 )
 
 const insertAvlPointQuery = `

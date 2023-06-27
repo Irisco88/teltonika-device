@@ -7,7 +7,7 @@ import (
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	pb "github.com/openfms/protos/gen/go/device/v1"
+	pb "github.com/openfms/protos/gen/device/v1"
 )
 
 //go:generate mockgen -source=$GOFILE -destination=mock_db/conn.go -package=$GOPACKAG

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	pb "github.com/openfms/protos/gen/go/device/v1"
+	pb "github.com/openfms/protos/gen/device/v1"
 	"golang.org/x/exp/slices"
 )
 
