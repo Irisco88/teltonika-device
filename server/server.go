@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openfms/teltonika-device/parser"
 	"io"
 	"net"
 	"sync"
@@ -11,7 +12,6 @@ import (
 	"github.com/nats-io/nats.go"
 	pb "github.com/openfms/protos/gen/device/v1"
 	avldb "github.com/openfms/teltonika-device/db/clickhouse"
-	"github.com/openfms/teltonika-device/server/parser"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 )

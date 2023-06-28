@@ -2,11 +2,15 @@ package main
 
 import (
 	"fmt"
+	"github.com/openfms/teltonika-device/simulator"
 	"log"
+	"math/rand"
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/nats-io/nats.go"
 	avldb "github.com/openfms/teltonika-device/db/clickhouse"
@@ -20,6 +24,9 @@ var (
 	PortNumber      uint
 	NatsAddr        string
 	AVLDBClickhouse string
+
+	SimulatorHostAddr string
+	TrackerIMEI       string
 )
 
 func main() {
@@ -27,13 +34,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("create new logger failed:%v\n", err)
 	}
-
+	randomIMEI := generateRandomIMEI()
 	app := &cli.App{
 		Name:  "server",
 		Usage: "teltonika tcp server",
 		Commands: []*cli.Command{
 			{
-				Name:  "start",
+				Name:  "server",
 				Usage: "starts server",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
@@ -93,6 +100,39 @@ func main() {
 					return nil
 				},
 			},
+			{
+				Name:  "simulator",
+				Usage: "starts teltonika simulator",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "host",
+						Usage:       "simulator host address",
+						Destination: &SimulatorHostAddr,
+						Required:    true,
+					},
+					&cli.StringFlag{
+						Name:        "imei",
+						Usage:       "device imei",
+						Value:       randomIMEI,
+						DefaultText: randomIMEI,
+						Destination: &TrackerIMEI,
+						Required:    false,
+					},
+				},
+				Action: func(ctx *cli.Context) error {
+					teltonikaSimulator := simulator.NewTrackerDevice(SimulatorHostAddr, TrackerIMEI, log.Default())
+					if e := teltonikaSimulator.Connect(); e != nil {
+						return e
+					}
+					go teltonikaSimulator.SendRandomPoints()
+
+					sigs := make(chan os.Signal, 1)
+					signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+					<-sigs
+					teltonikaSimulator.Stop()
+					return nil
+				},
+			},
 		},
 	}
 
@@ -100,4 +140,19 @@ func main() {
 		logger.Error("failed to run app", zap.Error(e))
 	}
 
+}
+
+func generateRandomIMEI() string {
+	// Seed the random number generator
+	randomizer := rand.New(rand.NewSource(time.Now().UnixNano()))
+	// Generate a random IMEI
+	imei := "35"
+
+	// Generate 13 random digits
+	for i := 0; i < 13; i++ {
+		digit := randomizer.Intn(10)
+		imei += strconv.Itoa(digit)
+	}
+
+	return imei
 }

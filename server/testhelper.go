@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/openfms/teltonika-device/parser"
 	"math/rand"
 	"net"
 	"testing"
@@ -9,7 +10,6 @@ import (
 	"github.com/nats-io/nats-server/v2/server"
 	natstest "github.com/nats-io/nats-server/v2/test"
 	"github.com/nats-io/nats.go"
-	"github.com/openfms/teltonika-device/server/parser"
 	"gotest.tools/v3/assert"
 )
 
