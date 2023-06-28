@@ -36,7 +36,7 @@ func main() {
 	}
 	randomIMEI := generateRandomIMEI()
 	app := &cli.App{
-		Name:  "server",
+		Name:  "teltonikasrv",
 		Usage: "teltonika tcp server",
 		Commands: []*cli.Command{
 			{
