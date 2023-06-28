@@ -49,7 +49,7 @@ func generateRandomIOElements() []*parser.IOElement {
 
 func getRandomValue() any {
 	// Generate a random value of any type (e.g., int, float64, string)
-	value := getRandomInt(1, 100)
+	value := uint32(getRandomInt(1, 100))
 
 	// Add more cases here if you want to generate values of different types
 	return value
