@@ -21,6 +21,7 @@ func (td *TrackerDevice) SendRandomPoints() {
 			td.log.Println("failed to send points", err)
 			return
 		}
+		td.log.Printf("sent %d points to server", numberOfPoints)
 		time.Sleep(time.Second * 3)
 	}
 }

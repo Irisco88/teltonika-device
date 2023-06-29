@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"sync"
+	"time"
 )
 
 type TrackerDevice struct {
@@ -50,5 +51,6 @@ func (td *TrackerDevice) Stop() {
 	td.wg.Wait()
 	td.conn.Close()
 	td.log.Println("stop tracker simulator...")
+	time.Sleep(time.Second * 3)
 	os.Exit(0)
 }
