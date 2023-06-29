@@ -8,7 +8,7 @@ import (
 
 func generateRandomAVLData() *parser.AVLData {
 	avlData := &parser.AVLData{
-		Timestamp:  uint64(time.Now().Unix()),
+		Timestamp:  uint64(time.Now().UnixMilli()),
 		Priority:   getRandomPacketPriority(),
 		Longitude:  getRandomFloat64(-180, 180),
 		Latitude:   getRandomFloat64(-90, 90),
