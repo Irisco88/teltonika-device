@@ -29,7 +29,7 @@ func getRandomPacketPriority() parser.PacketPriority {
 		parser.PriorityPanic,
 	}
 
-	return priorities[getRandomInt(0, len(priorities))]
+	return priorities[getRandomInt(0, len(priorities)-1)]
 }
 
 func generateRandomIOElements() []*parser.IOElement {
