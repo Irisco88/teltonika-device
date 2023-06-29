@@ -1,8 +1,13 @@
-# teltonika device service
-teltonika device service includes a `parser` to parse teltonika packets in `codec8 extended` protocol on `tcp` connection. this device service decodes `avl` data packets and saves all received points to a time serries database which in this case is `clickhouse`. it also publishes decoded points on nats subjects for each device using their `imei` 
+# Teltonika Device Service
+
+teltonika device service includes a `parser` to parse teltonika packets in `codec8 extended` protocol on `tcp`
+connection. this device service decodes `avl` data packets and saves all received points to a time serries database
+which in this case is `clickhouse`. it also publishes decoded points on nats subjects for each device using their `imei`
 
 ## Avl data structure
+
 this is avl point structure in `protobuf` format
+
 ```protobuf
 message AVLData {
   string imei = 1;
@@ -33,38 +38,52 @@ enum PacketPriority {
   PACKET_PRIORITY_PANIC = 2;
 }
 ```
+
 ## Avl Database
+
 the schema of `avldb` is shwon below
 
-| Column Name | Data Type                        |
-|-------------|----------------------------------|
-| imei        | String                           |
-| timestamp   | DateTime64(3)                    |
+| Column Name | Data Type                                                                                 |
+|-------------|-------------------------------------------------------------------------------------------|
+| imei        | String                                                                                    |
+| timestamp   | DateTime64(3)                                                                             |
 | priority    | Enum8('PACKET_PRIORITY_LOW' = 0, 'PACKET_PRIORITY_HIGH' = 1, 'PACKET_PRIORITY_PANIC' = 2) |
-| longitude   | Float64                          |
-| latitude    | Float64                          |
-| altitude    | Int16                            |
-| angle       | Int16                            |
-| satellites  | UInt8                            |
-| speed       | Int16                            |
-| io_elements | Map(UInt16, Int64)               |
-| event_id    | UInt16                           |
+| longitude   | Float64                                                                                   |
+| latitude    | Float64                                                                                   |
+| altitude    | Int16                                                                                     |
+| angle       | Int16                                                                                     |
+| satellites  | UInt8                                                                                     |
+| speed       | Int16                                                                                     |
+| io_elements | Map(UInt16, Int64)                                                                        |
+| event_id    | UInt16                                                                                    |
 
 ## Build
+
 ```sh
 just build
 just upx #build and compress binary
 ```
+
 ## Deploy
+
 deploy device service and its dependencies using provided docker compose file.
+
 ```sh
 just dcompose-up
 ```
+
 ## TODO
+
 + save rawdata
+
 - add grpc api to get `points` history
+
 + add grpc api to get `last-points`
+
 - add `gotest` tools to justfile
+
 + fix server test for mock
+
 - add support to `codec8` standard and others
+
 + check crc
