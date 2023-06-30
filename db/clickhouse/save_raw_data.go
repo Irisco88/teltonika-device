@@ -5,8 +5,8 @@ import (
 )
 
 const insertRawDataQuery = `
-	INSERT INTO rawdatas (timestamp, imei, payload)
-VALUES (now(), ?,?);
+	INSERT INTO rawdatas (imei, payload)
+VALUES (?,?);
 
 `
 

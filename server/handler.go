@@ -46,10 +46,11 @@ func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 			continue
 		}
 		ctx := context.Background()
-		if rawDataErr := ts.avlDB.SaveRawData(ctx, imei, hex.EncodeToString(buf)); rawDataErr != nil {
-			ts.log.Error("save raw data failed", zap.Error(rawDataErr))
-			continue
-		}
+		go func() {
+			if rawDataErr := ts.avlDB.SaveRawData(ctx, imei, hex.EncodeToString(buf)); rawDataErr != nil {
+				ts.log.Error("save raw data failed", zap.Error(rawDataErr))
+			}
+		}()
 		points, err := parser.ParsePacket(buf, imei)
 		if err != nil {
 			ts.log.Error("Error while parsing data",
