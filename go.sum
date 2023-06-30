@@ -55,6 +55,8 @@ github.com/openfms/protos v0.0.0-20230626094522-a732ab7f8d13 h1:uf/YBvNeZbFnkZpe
 github.com/openfms/protos v0.0.0-20230626094522-a732ab7f8d13/go.mod h1:ORRAWNKxQFeVjQle8XJTEKUBPAdObcIJznAXXRPUIRU=
 github.com/openfms/protos v0.0.0-20230627132904-cc1518615f5f h1:ovXZZ+XbD9og9dMHCmSlstdZK3UAZTdhG6GkRguPj3w=
 github.com/openfms/protos v0.0.0-20230627132904-cc1518615f5f/go.mod h1:ORRAWNKxQFeVjQle8XJTEKUBPAdObcIJznAXXRPUIRU=
+github.com/openfms/protos v0.0.0-20230629140036-bb06562ead9c h1:fXluqkkAMeA9p8c8c/OJfLK0wvjkHjABppgNyaIvYnI=
+github.com/openfms/protos v0.0.0-20230629140036-bb06562ead9c/go.mod h1:ORRAWNKxQFeVjQle8XJTEKUBPAdObcIJznAXXRPUIRU=
 github.com/paulmach/orb v0.7.1 h1:Zha++Z5OX/l168sqHK3k4z18LDvr+YAO/VjK0ReQ9rU=
 github.com/paulmach/orb v0.7.1/go.mod h1:FWRlTgl88VI1RBx/MkrwWDRhQ96ctqMCh8boXhmqB/A=
 github.com/paulmach/protoscan v0.2.1/go.mod h1:SpcSwydNLrxUGSDvXvO0P7g7AuhJ7lcKfDlhJCDw2gY=

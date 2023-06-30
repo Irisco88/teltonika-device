@@ -14,6 +14,7 @@ import (
 type AVLDBConn interface {
 	GetConn() driver.Conn
 	SaveAvlPoints(ctx context.Context, points []*pb.AVLData) error
+	SaveRawData(ctx context.Context, imei, payload string) error
 }
 
 var _ AVLDBConn = &AVLDataBase{}

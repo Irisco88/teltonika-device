@@ -10,7 +10,7 @@ import (
 
 	driver "github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	gomock "github.com/golang/mock/gomock"
-	devicev1 "github.com/openfms/protos/gen/go/device/v1"
+	devicev1 "github.com/openfms/protos/gen/device/v1"
 )
 
 // MockAVLDBConn is a mock of AVLDBConn interface.
@@ -62,4 +62,18 @@ func (m *MockAVLDBConn) SaveAvlPoints(ctx context.Context, points []*devicev1.AV
 func (mr *MockAVLDBConnMockRecorder) SaveAvlPoints(ctx, points interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveAvlPoints", reflect.TypeOf((*MockAVLDBConn)(nil).SaveAvlPoints), ctx, points)
+}
+
+// SaveRawData mocks base method.
+func (m *MockAVLDBConn) SaveRawData(ctx context.Context, imei, payload string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveRawData", ctx, imei, payload)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveRawData indicates an expected call of SaveRawData.
+func (mr *MockAVLDBConnMockRecorder) SaveRawData(ctx, imei, payload interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveRawData", reflect.TypeOf((*MockAVLDBConn)(nil).SaveRawData), ctx, imei, payload)
 }
