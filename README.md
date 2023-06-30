@@ -74,8 +74,6 @@ just dcompose-up
 
 ## TODO
 
-+ save rawdata
-
 - add grpc api to get `points` history
 
 + add grpc api to get `last-points`
