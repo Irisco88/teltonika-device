@@ -1,0 +1,29 @@
+name: Build Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build Docker Image
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            --build-arg GO_VERSION="1.20" \
+            --build-arg GOPROXYURL="https://goproxy.io" \
+            --build-arg COMPRESS="true" \
+            --build-arg COMPANY_HOST="github.com/openfms" \
+            --build-arg GITHUB_TOKEN="${{ secrets.GH_TOKEN }}" \
+            -t teltonika-device:latest \
+            -f Dockerfile \
+            .
