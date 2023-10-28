@@ -2,7 +2,7 @@ package simulator
 
 import (
 	"fmt"
-	"github.com/openfms/teltonika-device/parser"
+	"github.com/irisco88/teltonika-device/parser"
 	"log"
 	"net"
 	"os"

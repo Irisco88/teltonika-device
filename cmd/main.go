@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/openfms/teltonika-device/simulator"
+	"github.com/irisco88/teltonika-device/simulator"
 	"log"
 	"math/rand"
 	"net"
@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/nats-io/nats.go"
-	avldb "github.com/openfms/teltonika-device/db/clickhouse"
-	"github.com/openfms/teltonika-device/server"
+	avldb "github.com/irisco88/teltonika-device/db/clickhouse"
+	"github.com/irisco88/teltonika-device/server"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 )

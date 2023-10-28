@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/nats-io/nats.go"
-	avldb "github.com/openfms/teltonika-device/db/clickhouse"
+	avldb "github.com/irisco88/teltonika-device/db/clickhouse"
 	"go.uber.org/zap"
 )
 

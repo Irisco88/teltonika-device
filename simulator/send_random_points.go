@@ -1,7 +1,7 @@
 package simulator
 
 import (
-	"github.com/openfms/teltonika-device/parser"
+	"github.com/irisco88/teltonika-device/parser"
 	"time"
 )
 

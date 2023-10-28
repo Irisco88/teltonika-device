@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	pb "github.com/openfms/protos/gen/device/v1"
+	pb "github.com/irisco88/protos/gen/device/v1"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
 )

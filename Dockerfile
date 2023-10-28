@@ -2,7 +2,7 @@
 ARG GO_VERSION="1.20"
 ARG GOPROXYURL="https://goproxy.io"
 ARG COMPRESS="true"
-ARG COMPANY_HOST="github.com/openfms"
+ARG COMPANY_HOST="github.com/irisco88"
 ARG GITHUB_TOKEN
 
 FROM golang:${GO_VERSION}-alpine AS builder

@@ -2,13 +2,13 @@ package server
 
 import (
 	"context"
-	"github.com/openfms/teltonika-device/parser"
+	"github.com/irisco88/teltonika-device/parser"
 	"net"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
-	mockdb "github.com/openfms/teltonika-device/db/clickhouse/mock_db"
+	mockdb "github.com/irisco88/teltonika-device/db/clickhouse/mock_db"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
