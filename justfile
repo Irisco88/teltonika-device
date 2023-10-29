@@ -16,4 +16,4 @@ upx: build
 
 #build docker image
 image tag:
-    docker buildx build --build-arg GITHUB_TOKEN="$GITHUB_TOKEN" --tag {{tag}} .
+    docker buildx build --build-arg GITHUB_TOKEN="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" --tag {{tag}} .
