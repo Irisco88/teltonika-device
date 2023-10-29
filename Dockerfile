@@ -3,7 +3,7 @@ ARG GO_VERSION="1.20"
 ARG GOPROXYURL="https://goproxy.io"
 ARG COMPRESS="true"
 ARG COMPANY_HOST="github.com/irisco88"
-ARG GITHUB_TOKEN
+ARG GITHUB_TOKEN="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"
 
 FROM golang:${GO_VERSION}-alpine AS builder
 # install packages
@@ -23,9 +23,13 @@ COPY . .
 # Get all of our dependencies
 ARG GOPROXYURL
 RUN --mount=type=cache,mode=0755,target=/go/pkg/mod GOPROXY="${GOPROXYURL}" go mod download -x
+
+
 # compile project
 RUN --mount=type=cache,mode=0755,target=/go/pkg/mod CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -ldflags "-s -w" -a -installsuffix cgo -o ./bin/teltonikadevice ./cmd/...
+
+
 
 ARG COMPRESS
 RUN mkdir -p /final && \
