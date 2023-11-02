@@ -21,7 +21,7 @@ func (adb *AVLDataBase) SaveAvlPoints(ctx context.Context, points []*pb.AVLData)
 	}
 	for _, point := range points {
 		gps := point.GetGps()
-		elementMap := make(map[uint16]int64)
+		elementMap := make(map[uint16]any)
 		for _, element := range point.IoElements {
 			elementMap[uint16(element.ElementId)] = element.Value
 		}
