@@ -2,6 +2,7 @@ package parser
 
 import (
 	"encoding/binary"
+	pb "github.com/irisco88/protos/gen/device/v1"
 )
 
 type AVLData struct {
@@ -18,8 +19,8 @@ type AVLData struct {
 }
 
 type IOElement struct {
-	ID    uint16
-	Value any
+	ID     uint16
+	Values []*pb.Value
 }
 
 type PacketPriority uint8
@@ -83,7 +84,7 @@ func EncodeCodec8ExtendedAVLData(points []*AVLData) ([]byte, error) {
 			stage1, stage2, stage3, stage4 uint16
 		}{}
 		for _, element := range point.IOElements {
-			bytes, err := numberToStream(element.Value)
+			bytes, err := numberToStream(element.Values)
 			if err != nil {
 				return nil, err
 			}

@@ -248,7 +248,6 @@ func parseNEightValue(reader *bytes.Buffer) (values []*pb.Value) {
 	elementIntValue = float64(binary.BigEndian.Uint64(reader.Next(8)))
 	switch elementIntValue {
 	case 145:
-
 		elementItem.ElementName = "Vehicle Speed"
 		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(2)))
 		values = append(values, &elementItem)
@@ -265,19 +264,374 @@ func parseNEightValue(reader *bytes.Buffer) (values []*pb.Value) {
 		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
 		values = append(values, &elementItem)
 
-		var b = reader.Next(1)[0]
-		var bitArray = ConvertByteToBitArray(b)
-		elementItem.ElementName = "CheckEngine"
-		elementItem.ElementValue = float64(bitArray[0])
+		elementItem.ElementName = "CheckEngine !"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+			var b = reader.Next(1)[0]
+			var bitArray = ConvertByteToBitArray(b)
+
+			elementItem.ElementName = "CheckEngine"
+			elementItem.ElementValue = float64(bitArray[0])
+			values = append(values, &elementItem)
+
+			elementItem.ElementName = "AirConditionPressureSwitch1"
+			elementItem.ElementValue = float64(bitArray[1])
+			values = append(values, &elementItem)
+
+			elementItem.ElementName = "AirConditionPressureSwitch2"
+			elementItem.ElementValue = float64(bitArray[2])
+			values = append(values, &elementItem)
+
+
+			//elementItem.ElementName = "GearShiftindicator"
+			//elementItem.ElementValue = float64(binary.BigEndian.Uint32(bitArray[3], bitArray[4]))
+			//values = append(values, &elementItem)
+		//
+		//	elementItem.ElementName = "DesiredGearValue"
+		//	elementItem.ElementValue = float64(bitArray[5,6,7])
+		//values = append(values, &elementItem)
+
+		elementItem.ElementName = "GearShiftindicator !"
+		elementItem.ElementValue = float64(bitArray[3])
 		values = append(values, &elementItem)
 
-		//case 146:
-		//	elementName = "EngineSpeed_RPM"
-		//	elementValue = 4
+
+
+		elementItem.ElementName = "GearShiftindicator !"
+		elementItem.ElementValue = float64(bitArray[4])
+		values = append(values, &elementItem)
+
+		/
+			elementItem.ElementName = "DesiredGearValue !"
+			elementItem.ElementValue = float64(bitArray[5])
+		values = append(values, &elementItem)
+
+
+			elementItem.ElementName = "DesiredGearValue !"
+			elementItem.ElementValue = float64(bitArray[6])
+		values = append(values, &elementItem)
+
+
+			elementItem.ElementName = "DesiredGearValue !"
+			elementItem.ElementValue = float64(bitArray[7])
+		values = append(values, &elementItem)
+	case 146:
+		//	var b = reader.Next(1)[0]
+		//	var bitArray = ConvertByteToBitArray(b)
 		//
-		//case 147:
-		//	elementName = "engine load"
-		//	elementValue = 0
+		//	elementItem.ElementName = "Condition immobilizer"
+		//	elementItem.ElementValue = float64(bitArray[0,
+		//	1, 2])
+		//values = append(values, &elementItem)
+		//
+		//elementItem.ElementName = "BrakePedalStatus"
+		//elementItem.ElementValue = float64(bitArray[3, 4])
+		//values = append(values, &elementItem)
+		//
+		//elementItem.ElementName = "ClutchPedalStatus"
+		//elementItem.ElementValue = float64(bitArray[5])
+		//values = append(values, &elementItem)
+		//
+		//elementItem.ElementName = "GearEngagedStatus"
+		//elementItem.ElementValue = float64(bitArray[6, 7])
+		//values = append(values, &elementItem)
+		elementItem.ElementName = "Condition immobilizer !"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "ActualAccPedal"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "EngineThrottlePosition"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "IndicatedEngineTorque"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Engine Friction Torque"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "EngineActualTorque"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		//var b = reader.Next(1)[0]
+		//var bitArray = ConvertByteToBitArray(b)
+		//
+		//elementItem.ElementName = "CruiseControlOn_Off"
+		//elementItem.ElementValue = float64(bitArray[0])
+		//
+		//elementItem.ElementName = "SpeedLimiterOn_Off"
+		//elementItem.ElementValue = float64(bitArray[1])
+		//
+		//elementItem.ElementName = "condition cruise control lamp"
+		//elementItem.ElementValue = float64(bitArray[2])
+		//
+		//elementItem.ElementName = "EngineFuleCutOff"
+		//elementItem.ElementValue = float64(bitArray[3])
+		//
+		//elementItem.ElementName = "Condition catalyst heating activated"
+		//elementItem.ElementValue = float64(bitArray[4])
+		//
+		//elementItem.ElementName = "AC compressor status"
+		//elementItem.ElementValue = float64(bitArray[5])
+		//
+		//elementItem.ElementName = "Condition main relay -----> Starter Relay"
+		//elementItem.ElementValue = float64(bitArray[6])
+		//
+		//elementItem.ElementName = "Reserve"
+		//elementItem.ElementValue = float64(bitArray[7])
+		elementItem.ElementName = "CruiseControlOn_Off !"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Reserve"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+	case 147:
+		elementItem.ElementName = "distance"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(5)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "ActualAccPedal"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Intake air temperature"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+	case 148:
+		elementItem.ElementName = "DesiredSpeed"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(2)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Oil temperature------>TCU"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Ambient air temperature"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Number of DTC"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "EMS_DTC"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "ABS_DTC"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "BCM_DTC"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+	case 149:
+		elementItem.ElementName = "ACU_DTC"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "ESC_DTC"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "ICN_DTC"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(2)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "EPS_DTC"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "CAS_DTC"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "FCM/FN_DTC"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "ICU_DTC"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Reserve_DTC"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+	case 150:
+		elementItem.ElementName = "Sensor1_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor1_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor2_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor2_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor3_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor3_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor4_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor4_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+	case 151:
+		elementItem.ElementName = "Sensor5_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor5_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor6_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor6_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor7_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor7_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor8_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor8_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+	case 152:
+		elementItem.ElementName = "Sensor9_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor9_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor10_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor10_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor11_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor11_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor12_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor12_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+	case 153:
+		elementItem.ElementName = "Sensor13_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor13_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor14_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor14_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor15_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor15_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor16_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor16_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+	case 154:
+		elementItem.ElementName = "Sensor17_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor17_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor18_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor18_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor19_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor19_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor20_low"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
+		elementItem.ElementName = "Sensor20_high"
+		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+		values = append(values, &elementItem)
+
 	}
 
 	return values

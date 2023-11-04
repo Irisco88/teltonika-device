@@ -37,9 +37,11 @@ func streamToNumber[T constraints.Integer | constraints.Float](data []byte) (T, 
 func numberToStream(value any) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, value); err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 	return buf.Bytes(), nil
+
 }
 
 func twosComplement(input int32) int32 {

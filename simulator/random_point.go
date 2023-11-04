@@ -1,6 +1,7 @@
 package simulator
 
 import (
+	pb "github.com/irisco88/protos/gen/device/v1"
 	"github.com/irisco88/teltonika-device/parser"
 	"math/rand"
 	"time"
@@ -38,8 +39,8 @@ func generateRandomIOElements() []*parser.IOElement {
 
 	for i := 0; i < numIOElements; i++ {
 		ioElement := &parser.IOElement{
-			ID:    uint16(getRandomInt(1, 100)),
-			Value: getRandomValue(),
+			ID:     uint16(getRandomInt(1, 100)),
+			Values: getRandomValue(),
 		}
 		elements[i] = ioElement
 	}
@@ -47,12 +48,16 @@ func generateRandomIOElements() []*parser.IOElement {
 	return elements
 }
 
-func getRandomValue() any {
+func getRandomValue() (values []*pb.Value) {
 	// Generate a random value of any type (e.g., int, float64, string)
-	value := uint32(getRandomInt(1, 100))
 
-	// Add more cases here if you want to generate values of different types
-	return value
+	v1 := pb.Value{
+		ElementName:  "test",
+		ElementValue: float64(getRandomInt(1, 100)),
+	}
+	values = append(values, &v1)
+	return values
+
 }
 
 func getRandomFloat64(min, max float64) float64 {
