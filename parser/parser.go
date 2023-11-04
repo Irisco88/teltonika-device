@@ -267,25 +267,24 @@ func parseNEightValue(reader *bytes.Buffer) (values []*pb.Value) {
 		elementItem.ElementName = "CheckEngine !"
 		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
 		values = append(values, &elementItem)
-			var b = reader.Next(1)[0]
-			var bitArray = ConvertByteToBitArray(b)
+		var b = reader.Next(1)[0]
+		var bitArray = ConvertByteToBitArray(b)
 
-			elementItem.ElementName = "CheckEngine"
-			elementItem.ElementValue = float64(bitArray[0])
-			values = append(values, &elementItem)
+		elementItem.ElementName = "CheckEngine"
+		elementItem.ElementValue = float64(bitArray[0])
+		values = append(values, &elementItem)
 
-			elementItem.ElementName = "AirConditionPressureSwitch1"
-			elementItem.ElementValue = float64(bitArray[1])
-			values = append(values, &elementItem)
+		elementItem.ElementName = "AirConditionPressureSwitch1"
+		elementItem.ElementValue = float64(bitArray[1])
+		values = append(values, &elementItem)
 
-			elementItem.ElementName = "AirConditionPressureSwitch2"
-			elementItem.ElementValue = float64(bitArray[2])
-			values = append(values, &elementItem)
+		elementItem.ElementName = "AirConditionPressureSwitch2"
+		elementItem.ElementValue = float64(bitArray[2])
+		values = append(values, &elementItem)
 
-
-			//elementItem.ElementName = "GearShiftindicator"
-			//elementItem.ElementValue = float64(binary.BigEndian.Uint32(bitArray[3], bitArray[4]))
-			//values = append(values, &elementItem)
+		//elementItem.ElementName = "GearShiftindicator"
+		//elementItem.ElementValue = float64(binary.BigEndian.Uint32(bitArray[3], bitArray[4]))
+		//values = append(values, &elementItem)
 		//
 		//	elementItem.ElementName = "DesiredGearValue"
 		//	elementItem.ElementValue = float64(bitArray[5,6,7])
@@ -295,25 +294,20 @@ func parseNEightValue(reader *bytes.Buffer) (values []*pb.Value) {
 		elementItem.ElementValue = float64(bitArray[3])
 		values = append(values, &elementItem)
 
-
-
 		elementItem.ElementName = "GearShiftindicator !"
 		elementItem.ElementValue = float64(bitArray[4])
 		values = append(values, &elementItem)
 
-		/
-			elementItem.ElementName = "DesiredGearValue !"
-			elementItem.ElementValue = float64(bitArray[5])
+		elementItem.ElementName = "DesiredGearValue !"
+		elementItem.ElementValue = float64(bitArray[5])
 		values = append(values, &elementItem)
 
-
-			elementItem.ElementName = "DesiredGearValue !"
-			elementItem.ElementValue = float64(bitArray[6])
+		elementItem.ElementName = "DesiredGearValue !"
+		elementItem.ElementValue = float64(bitArray[6])
 		values = append(values, &elementItem)
 
-
-			elementItem.ElementName = "DesiredGearValue !"
-			elementItem.ElementValue = float64(bitArray[7])
+		elementItem.ElementName = "DesiredGearValue !"
+		elementItem.ElementValue = float64(bitArray[7])
 		values = append(values, &elementItem)
 	case 146:
 		//	var b = reader.Next(1)[0]

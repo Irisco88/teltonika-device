@@ -39,8 +39,8 @@ func TestAVLDataBase_SaveAvlPoints(t *testing.T) {
 						Satellites: 23,
 					},
 					IoElements: []*pb.IOElement{
-						{ElementId: 87, Value: 23205},
-						{ElementId: 2, Value: 785},
+						//{ElementId: 87, Value: 23205},
+						//{ElementId: 2, Value: 785},
 					},
 				},
 				{
@@ -57,8 +57,8 @@ func TestAVLDataBase_SaveAvlPoints(t *testing.T) {
 						Satellites: 13,
 					},
 					IoElements: []*pb.IOElement{
-						{ElementId: 1, Value: 125},
-						{ElementId: 3, Value: 56},
+						//{ElementId: 1, Value: 125},
+						//{ElementId: 3, Value: 56},
 					},
 				},
 			},
