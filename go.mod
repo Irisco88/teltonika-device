@@ -6,7 +6,7 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.2.0
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/golang/mock v1.6.0
-	github.com/irisco88/protos v1.0.11
+	github.com/irisco88/protos v1.0.12
 	github.com/nats-io/nats-server/v2 v2.9.17
 	github.com/nats-io/nats.go v1.26.0
 	github.com/urfave/cli/v2 v2.25.3
