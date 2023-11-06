@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	pb "github.com/irisco88/protos/gen/device/v1"
+	pb "github.com/irisco88/protos/gen/device/v2"
 	"github.com/irisco88/teltonika-device/parser"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
@@ -46,7 +46,7 @@ func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 			continue
 		}
 		ctx := context.Background()
-		
+
 		go func() {
 			if rawDataErr := ts.avlDB.SaveRawData(ctx, imei, hex.EncodeToString(buf)); rawDataErr != nil {
 				ts.log.Error("save raw data failed", zap.Error(rawDataErr))
@@ -63,7 +63,7 @@ func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 			return
 		}
 		go func() {
-			ts.LogPoints(points,buf)
+			ts.LogPoints(points, buf)
 			ts.PublishLastPoint(imei, points)
 			if e := ts.avlDB.SaveAvlPoints(ctx, points); e != nil {
 				ts.log.Error("failed to save avl points", zap.Error(e))
@@ -86,7 +86,7 @@ func (ts *TeltonikaServer) PublishLastPoint(imei string, points []*pb.AVLData) {
 	}
 }
 
-func (ts *TeltonikaServer) LogPoints(points []*pb.AVLData,buff []byte) {
+func (ts *TeltonikaServer) LogPoints(points []*pb.AVLData, buff []byte) {
 	for _, p := range points {
 		ts.log.Info("new packet",
 			zap.String("Priority", p.Priority.String()),
@@ -94,7 +94,7 @@ func (ts *TeltonikaServer) LogPoints(points []*pb.AVLData,buff []byte) {
 			zap.Uint64("Timestamp", p.GetTimestamp()),
 			zap.Any("Gps", p.GetGps()),
 			zap.Any("IOElements", p.GetIoElements()),
-			zap.Any("***************",buff),
+			zap.Any("***************", buff),
 		)
 	}
 }

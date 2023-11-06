@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	pb "github.com/irisco88/protos/gen/device/v1"
+	pb "github.com/irisco88/protos/gen/device/v2"
 	"gotest.tools/v3/assert"
 )
 

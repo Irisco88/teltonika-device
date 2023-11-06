@@ -1,5 +1,4 @@
 module github.com/irisco88/teltonika-device
-
 go 1.20
 
 require (
@@ -15,7 +14,6 @@ require (
 	google.golang.org/protobuf v1.31.0
 	gotest.tools/v3 v3.4.0
 )
-
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
