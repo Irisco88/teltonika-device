@@ -1,7 +1,7 @@
 package simulator
 
 import (
-	pb "github.com/irisco88/protos/gen/device/v2"
+	pb "github.com/irisco88/protos/gen/device/v1"
 	"github.com/irisco88/teltonika-device/parser"
 	"math/rand"
 	"time"

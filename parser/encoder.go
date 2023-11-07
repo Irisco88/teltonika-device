@@ -2,7 +2,7 @@ package parser
 
 import (
 	"encoding/binary"
-	pb "github.com/irisco88/protos/gen/device/v2"
+	pb "github.com/irisco88/protos/gen/device/v1"
 )
 
 type AVLData struct {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	pb "github.com/irisco88/protos/gen/device/v2"
+	pb "github.com/irisco88/protos/gen/device/v1"
 )
 
 const insertAvlPointQuery = `

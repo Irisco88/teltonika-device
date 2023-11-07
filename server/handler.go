@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	pb "github.com/irisco88/protos/gen/device/v2"
+	pb "github.com/irisco88/protos/gen/device/v1"
 	"github.com/irisco88/teltonika-device/parser"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
