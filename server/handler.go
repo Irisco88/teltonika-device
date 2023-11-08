@@ -54,6 +54,9 @@ func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 		}()
 
 		points, err := parser.ParsePacket(buf, imei)
+		ts.log.Info("Data buf ",
+			zap.String("ip", string(buf)),
+		)
 		fmt.Println("************", buf)
 		if err != nil {
 			ts.log.Error("Error while parsing data",

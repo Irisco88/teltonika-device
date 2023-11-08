@@ -146,29 +146,22 @@ func parseCodec8eIOElements(reader *bytes.Buffer) (elements []*pb.IOElement, err
 			//	elementValue *pb.Value
 			//	elementID    uint16
 			//)
-			var elementValueArray = []*pb.Value{}
-			elementID := binary.BigEndian.Uint16(reader.Next(2))
+			//var elementValueArray = []*pb.Value{}
+			//elementID := binary.BigEndian.Uint16(reader.Next(2))
 			switch stage {
 			case 1: // One byte IO Elements
-
 				elementValue := parseNOneValue(reader)
-				elementValueArray = append(elementValueArray, elementValue)
-
+				elements = append(elements, elementValue)
 			case 2: // Two byte IO Elements
 				elementValue := parseNTowValue(reader)
-				elementValueArray = append(elementValueArray, elementValue)
-
+				elements = append(elements, elementValue)
 			case 3: // Four byte IO Elements
 				elementValue := parseNFourValue(reader)
-				elementValueArray = append(elementValueArray, elementValue)
+				elements = append(elements, elementValue)
 			case 4: // Eight byte IO Elements
 				elementValue := parseNEightValue(reader)
-				elementValueArray = elementValue
+				elements = elementValue
 			}
-			elements = append(elements, &pb.IOElement{
-				ElementId: int32(elementID),
-				Value:     elementValueArray,
-			})
 		}
 	}
 	reader.Next(2) //nx
@@ -176,12 +169,12 @@ func parseCodec8eIOElements(reader *bytes.Buffer) (elements []*pb.IOElement, err
 		return nil, ErrInvalidElementLen
 	}
 	slices.SortFunc(elements, func(a, b *pb.IOElement) bool {
-		return a.ElementId < b.ElementId
+		return a.ElementName < b.ElementName
 	})
 	return elements, nil
 }
 
-func parseNOneValue(reader *bytes.Buffer) (values *pb.Value) {
+func parseNOneValue(reader *bytes.Buffer) (values *pb.IOElement) {
 	var elementName string
 	var elementIntValue float64
 	elementIntValue = float64(reader.Next(1)[0])
@@ -214,7 +207,7 @@ func parseNOneValue(reader *bytes.Buffer) (values *pb.Value) {
 	}
 	return values
 }
-func parseNTowValue(reader *bytes.Buffer) (values *pb.Value) {
+func parseNTowValue(reader *bytes.Buffer) (values *pb.IOElement) {
 	var elementName string
 	var elementIntValue float64
 	elementIntValue = float64(binary.BigEndian.Uint16(reader.Next(2)))
@@ -240,7 +233,7 @@ func parseNTowValue(reader *bytes.Buffer) (values *pb.Value) {
 	}
 	return values
 }
-func parseNFourValue(reader *bytes.Buffer) (values *pb.Value) {
+func parseNFourValue(reader *bytes.Buffer) (values *pb.IOElement) {
 	var elementName string
 	var elementIntValue float64
 	elementIntValue = float64(binary.BigEndian.Uint32(reader.Next(4)))
@@ -251,8 +244,8 @@ func parseNFourValue(reader *bytes.Buffer) (values *pb.Value) {
 	}
 	return values
 }
-func parseNEightValue(reader *bytes.Buffer) (values []*pb.Value) {
-	var elementItem pb.Value
+func parseNEightValue(reader *bytes.Buffer) (values []*pb.IOElement) {
+	var elementItem pb.IOElement
 	var elementIntValue float64
 	elementIntValue = float64(binary.BigEndian.Uint64(reader.Next(8)))
 	switch elementIntValue {

@@ -23,14 +23,15 @@ func (adb *AVLDataBase) SaveAvlPoints(ctx context.Context, points []*pb.AVLData)
 		gps := point.GetGps()
 
 		elementMap := make(map[string]float64)
-		elementAllMap := make(map[uint16]map[string]float64)
+		//	elementAllMap := make(map[uint16]map[string]float64)
 		for _, element := range point.IoElements {
 			//elementMap[uint16(element.ElementId)] = element.Value
-			for _, Values := range element.Value {
-				elementMap[(Values.ElementName)] = Values.ElementValue
-
-				elementAllMap[uint16(element.ElementId)] = elementMap
-			}
+			elementMap[(element.ElementName)] = element.ElementValue
+			//for _, Values := range element.Value {
+			//	elementMap[(Values.ElementName)] = Values.ElementValue
+			//
+			//	//elementAllMap[uint16(element.ElementId)] = elementMap
+			//}
 		}
 
 		err := batch.Append(
@@ -44,7 +45,7 @@ func (adb *AVLDataBase) SaveAvlPoints(ctx context.Context, points []*pb.AVLData)
 			uint8(gps.GetSatellites()),
 			int16(gps.GetSpeed()),
 			uint16(point.GetEventId()),
-			elementAllMap,
+			elementMap,
 		)
 		if err != nil {
 			return err
