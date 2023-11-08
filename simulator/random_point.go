@@ -38,20 +38,20 @@ func generateRandomIOElements() []*parser.IOElement {
 	elements := make([]*parser.IOElement, numIOElements)
 
 	for i := 0; i < numIOElements; i++ {
-		ioElement := &parser.IOElement{
-			ID:     uint16(getRandomInt(1, 100)),
-			Values: getRandomValue(),
-		}
-		elements[i] = ioElement
+		//	ioElement := &parser.IOElementVal{
+		//	ID:     uint16(getRandomInt(1, 100)),
+		//Values: getRandomValue(),
+		//	}
+		//	elements[i] = ioElement
 	}
 
 	return elements
 }
 
-func getRandomValue() (values []*pb.Value) {
+func getRandomValue() (values []*pb.IOElement) {
 	// Generate a random value of any type (e.g., int, float64, string)
 
-	v1 := pb.Value{
+	v1 := pb.IOElement{
 		ElementName:  "test",
 		ElementValue: float64(getRandomInt(1, 100)),
 	}
