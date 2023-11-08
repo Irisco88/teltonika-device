@@ -44,7 +44,7 @@ func (adb *AVLDataBase) SaveAvlPoints(ctx context.Context, points []*pb.AVLData)
 			uint8(gps.GetSatellites()),
 			int16(gps.GetSpeed()),
 			uint16(point.GetEventId()),
-			elementMap,
+			elementAllMap,
 		)
 		if err != nil {
 			return err
