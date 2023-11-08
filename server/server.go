@@ -1,14 +1,24 @@
 package server
 
 import (
+	"context"
+	pb "github.com/irisco88/protos/gen/device/v1"
 	"net"
 	"sync"
 
 	"github.com/nats-io/nats.go"
+
+	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	avldb "github.com/irisco88/teltonika-device/db/clickhouse"
+
 	"go.uber.org/zap"
 )
 
+type AVLDBConn interface {
+	GetConn() driver.Conn
+	SaveAvlPoints(ctx context.Context, points []*pb.AVLData) error
+	SaveRawData(ctx context.Context, imei, payload string) error
+}
 type Empty struct{}
 
 type TeltonikaServer struct {

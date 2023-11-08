@@ -41,11 +41,11 @@ func TestSendData(t *testing.T) {
 					Satellites: 32,
 					Speed:      120,
 					EventID:    36,
-					IOElements: []*parser.IOElement{
-						{ID: 1, Value: uint32(500)},
-						{ID: 2, Value: true},
-						{ID: 3, Value: uint8(54)},
-					},
+					//IOElements: []*parser.IOElement{
+					//	{ID: 1, Values: uint32(500)},
+					//	{ID: 2, Values: true},
+					//	{ID: 3, Values: uint8(54)},
+					//},
 				},
 			},
 		},

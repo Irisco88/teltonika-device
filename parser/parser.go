@@ -151,7 +151,8 @@ func parseCodec8eIOElements(reader *bytes.Buffer) (elements []*pb.IOElement, err
 			switch stage {
 			case 1: // One byte IO Elements
 
-				elementValue := parseNOneValue(reader)
+				//elementValue := parseNOneValue(reader)
+				elementValue := parseNTowValue(reader)
 				elementValueArray = append(elementValueArray, elementValue)
 
 			case 2: // Two byte IO Elements
@@ -204,9 +205,14 @@ func parseNOneValue(reader *bytes.Buffer) (values *pb.Value) {
 		elementName = "Crash Detection"
 	case 255:
 		elementName = "Over Speeding"
+	default:
+		elementName = "default Value"
 	}
-	values.ElementName = elementName
-	values.ElementValue = elementIntValue
+	fmt.Println("salaaaaaaaaaaaaaaaam1", elementName)
+	if values != nil {
+		values.ElementName = elementName
+		values.ElementValue = elementIntValue
+	}
 	return values
 }
 func parseNTowValue(reader *bytes.Buffer) (values *pb.Value) {
@@ -229,8 +235,10 @@ func parseNTowValue(reader *bytes.Buffer) (values *pb.Value) {
 	case 245:
 		elementName = "Analog Input 4"
 	}
-	values.ElementName = elementName
-	values.ElementValue = elementIntValue
+	if values != nil {
+		values.ElementName = elementName
+		values.ElementValue = elementIntValue
+	}
 	return values
 }
 func parseNFourValue(reader *bytes.Buffer) (values *pb.Value) {
@@ -238,8 +246,10 @@ func parseNFourValue(reader *bytes.Buffer) (values *pb.Value) {
 	var elementIntValue float64
 	elementIntValue = float64(binary.BigEndian.Uint32(reader.Next(4)))
 	elementName = ""
-	values.ElementName = elementName
-	values.ElementValue = elementIntValue
+	if values != nil {
+		values.ElementName = elementName
+		values.ElementValue = elementIntValue
+	}
 	return values
 }
 func parseNEightValue(reader *bytes.Buffer) (values []*pb.Value) {
@@ -627,7 +637,6 @@ func parseNEightValue(reader *bytes.Buffer) (values []*pb.Value) {
 		values = append(values, &elementItem)
 
 	}
-
 	return values
 }
 
