@@ -151,8 +151,7 @@ func parseCodec8eIOElements(reader *bytes.Buffer) (elements []*pb.IOElement, err
 			switch stage {
 			case 1: // One byte IO Elements
 
-				//elementValue := parseNOneValue(reader)
-				elementValue := parseNTowValue(reader)
+				elementValue := parseNOneValue(reader)
 				elementValueArray = append(elementValueArray, elementValue)
 
 			case 2: // Two byte IO Elements
