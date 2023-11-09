@@ -6,8 +6,12 @@ import (
 	"errors"
 	"fmt"
 	pb "github.com/irisco88/protos/gen/device/v1"
+	//"github.com/nats-io/nats.go"
+	"go.uber.org/zap"
 	"golang.org/x/exp/slices"
+	//"net"
 	"strconv"
+	//"sync"
 )
 
 var (
@@ -25,6 +29,7 @@ type Header struct {
 	DataLength   uint32
 	CodecID      uint8
 	NumberOfData uint8
+	log          *zap.Logger
 }
 
 func ParseHeader(reader *bytes.Buffer) (*Header, error) {
@@ -40,7 +45,13 @@ func ParseHeader(reader *bytes.Buffer) (*Header, error) {
 }
 
 func ParsePacket(data []byte, imei string) ([]*pb.AVLData, error) {
+	//header := &Header{}
+
 	reader := bytes.NewBuffer(data)
+	//header.log.Info("somayeeeeeeeeeeee1********",
+	//	zap.Any("IOElements", reader),
+	//)
+
 	header, err := ParseHeader(reader)
 	if err != nil {
 		return nil, ErrInvalidHeader
@@ -112,26 +123,13 @@ func parseCodec8EPacket(reader *bytes.Buffer, header *Header, imei string) ([]*p
 	return points, nil
 }
 
-/*
-ioElement:[
-	{
-		elementId:145,
-		value:
-		[
-			{
-			elementName:"speed",
-			elementValue:-1.5
-			},
-			{
-			elementName:"rpm",
-			elementValue:-1.5
-			}
-		]
-	}
-]
-*/
-
 func parseCodec8eIOElements(reader *bytes.Buffer) (elements []*pb.IOElement, err error) {
+
+	//header := &Header{}
+	//header.log.Info("somayeeeeeeeeeeee********",
+	//	zap.Any("IOElements", ""),
+	//)
+
 	//total id (N of Total ID)
 	totalElements := binary.BigEndian.Uint16(reader.Next(2))
 
