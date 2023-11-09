@@ -200,7 +200,6 @@ func parseNOneValue(reader *bytes.Buffer) (values *pb.IOElement) {
 	default:
 		elementName = "default Value"
 	}
-	fmt.Println("salaaaaaaaaaaaaaaaam1", elementName)
 	if values != nil {
 		values.ElementName = elementName
 		values.ElementValue = elementIntValue
