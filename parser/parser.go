@@ -6,8 +6,9 @@ import (
 	"errors"
 	"fmt"
 	pb "github.com/irisco88/protos/gen/device/v1"
-	//"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
+	"reflect"
+
 	"golang.org/x/exp/slices"
 	//"net"
 	"strconv"
@@ -29,7 +30,7 @@ type Header struct {
 	DataLength   uint32
 	CodecID      uint8
 	NumberOfData uint8
-	log          *zap.Logger
+	logger       *zap.Logger
 }
 
 func ParseHeader(reader *bytes.Buffer) (*Header, error) {
@@ -45,13 +46,10 @@ func ParseHeader(reader *bytes.Buffer) (*Header, error) {
 }
 
 func ParsePacket(data []byte, imei string) ([]*pb.AVLData, error) {
-	//header := &Header{}
+	logger, _ := zap.NewDevelopment()
+	defer logger.Sync()
 
 	reader := bytes.NewBuffer(data)
-	//header.log.Info("somayeeeeeeeeeeee1********",
-	//	zap.Any("IOElements", reader),
-	//)
-
 	header, err := ParseHeader(reader)
 	if err != nil {
 		return nil, ErrInvalidHeader
@@ -75,10 +73,18 @@ func ParsePacket(data []byte, imei string) ([]*pb.AVLData, error) {
 		//TODO check crc
 		//return nil, ErrCheckCRC
 	}
+	logger.Info("salaaaaaaaaaaaaaaaaam111",
+		zap.Any("crc:", crc),
+		zap.Any("header:", header),
+		zap.Any("calculatedCRC:", calculatedCRC),
+	)
 	return points, nil
 }
 
 func parseCodec8EPacket(reader *bytes.Buffer, header *Header, imei string) ([]*pb.AVLData, error) {
+	logger, _ := zap.NewDevelopment()
+	defer logger.Sync()
+
 	points := make([]*pb.AVLData, header.NumberOfData)
 	for i := uint8(0); i < header.NumberOfData; i++ {
 		timestamp := binary.BigEndian.Uint64(reader.Next(8))
@@ -97,6 +103,17 @@ func parseCodec8EPacket(reader *bytes.Buffer, header *Header, imei string) ([]*p
 		Satellites := int32(reader.Next(1)[0])
 		speed := int32(binary.BigEndian.Uint16(reader.Next(2)))
 		eventID := binary.BigEndian.Uint16(reader.Next(2))
+		logger.Info("salaaaaaaaaaaaaaaaaam112",
+			zap.Any("Longitude:", longitude),
+			zap.Any("Latitude:", latitude),
+			zap.Any("Altitude:", altitude),
+			zap.Any("Angle:", angle),
+			zap.Any("Speed:", speed),
+			zap.Any("Satellites:", Satellites),
+			zap.Any("eventID:", eventID),
+			zap.Any("priority:", priority),
+			zap.Any("timestamp:", timestamp),
+		)
 		points[i] = &pb.AVLData{
 			Imei:      imei,
 			Timestamp: timestamp,
@@ -111,7 +128,9 @@ func parseCodec8EPacket(reader *bytes.Buffer, header *Header, imei string) ([]*p
 				Satellites: Satellites,
 			},
 		}
+
 		elements, err := parseCodec8eIOElements(reader)
+
 		if err != nil {
 			return nil, fmt.Errorf("parse io elements failed:%v", err)
 		}
@@ -124,59 +143,78 @@ func parseCodec8EPacket(reader *bytes.Buffer, header *Header, imei string) ([]*p
 }
 
 func parseCodec8eIOElements(reader *bytes.Buffer) (elements []*pb.IOElement, err error) {
-
-	//header := &Header{}
-	//header.log.Info("somayeeeeeeeeeeee********",
-	//	zap.Any("IOElements", ""),
-	//)
+	logger, _ := zap.NewDevelopment()
+	defer logger.Sync()
 
 	//total id (N of Total ID)
 	totalElements := binary.BigEndian.Uint16(reader.Next(2))
-
+	logger.Info("salaaaaaaaaaaaaaaaaam4",
+		zap.Any("totalElements:", totalElements),
+	)
 	//n1 , n2 , n4 , n8
 	for stage := 1; stage <= 4; stage++ {
 
 		//total id in this stage  (N 1|2|4|8 of One Byte Io )
 		stageElements := binary.BigEndian.Uint16(reader.Next(2))
-
+		logger.Info("salaaaaaaaaaaaaaaaaam5",
+			zap.Any("stageElements:", stageElements),
+		)
 		for elementIndex := uint16(0); elementIndex < stageElements; elementIndex++ {
 			//var (
 			//	elementValue *pb.Value
 			//	elementID    uint16
 			//)
 			//var elementValueArray = []*pb.Value{}
-			//elementID := binary.BigEndian.Uint16(reader.Next(2))
+
+			//logger.Info("salaaaaaaaaaaaaaaaaam5000",
+			//	zap.Any("len:", binary.BigEndian.Uint16(reader.Next(2))),
+			//)
+
+			elementID := binary.BigEndian.Uint16(reader.Next(2))
 			switch stage {
 			case 1: // One byte IO Elements
-				elementValue := parseNOneValue(reader)
+
+				elementValue := parseNOneValue(reader, elementID)
 				elements = append(elements, elementValue)
+			//break
 			case 2: // Two byte IO Elements
-				elementValue := parseNTowValue(reader)
+				elementValue := parseNTowValue(reader, elementID)
 				elements = append(elements, elementValue)
 			case 3: // Four byte IO Elements
-				elementValue := parseNFourValue(reader)
+				elementValue := parseNFourValue(reader, elementID)
 				elements = append(elements, elementValue)
 			case 4: // Eight byte IO Elements
-				elementValue := parseNEightValue(reader)
+				elementValue := parseNEightValue(reader, elementID)
 				elements = elementValue
 			}
 		}
 	}
 	reader.Next(2) //nx
+	logger.Info("salaaaaaaaaaaaaaaaaam9",
+		zap.Any("nx:", reader.Next(2)),
+	)
 	if len(elements) != int(totalElements) {
+		logger.Info("salaaaaaaaaaaaaaaaaam10",
+			zap.Any("total:", totalElements),
+			zap.Any("len:", len(elements)),
+		)
 		return nil, ErrInvalidElementLen
 	}
-	slices.SortFunc(elements, func(a, b *pb.IOElement) bool {
-		return a.ElementName < b.ElementName
-	})
+	//slices.SortFunc(elements, func(a, b *pb.IOElement) bool {
+	//	return a.ElementName < b.ElementName
+	//})
 	return elements, nil
 }
 
-func parseNOneValue(reader *bytes.Buffer) (values *pb.IOElement) {
+func parseNOneValue(reader *bytes.Buffer, elementId uint16) (values *pb.IOElement) {
+	logger, _ := zap.NewDevelopment()
+	defer logger.Sync()
 	var elementName string
+
 	var elementIntValue float64
-	elementIntValue = float64(reader.Next(1)[0])
-	switch elementIntValue {
+	elementIntValue = float64(int64(reader.Next(1)[0]))
+
+	switch elementId {
 	case 1:
 		elementName = "Digital Input 1"
 	case 2:
@@ -198,17 +236,25 @@ func parseNOneValue(reader *bytes.Buffer) (values *pb.IOElement) {
 	default:
 		elementName = "default Value"
 	}
+	logger.Info("salaaaaaaaaaaaaaaaaam60",
+		zap.Any("elementIntValue:", elementIntValue),
+		zap.Any("elementId:", elementId),
+		zap.Any("elementName:", elementName),
+	)
 	if values != nil {
 		values.ElementName = elementName
 		values.ElementValue = elementIntValue
 	}
 	return values
 }
-func parseNTowValue(reader *bytes.Buffer) (values *pb.IOElement) {
+func parseNTowValue(reader *bytes.Buffer, elementId uint16) (values *pb.IOElement) {
+	logger, _ := zap.NewDevelopment()
+	defer logger.Sync()
 	var elementName string
+
 	var elementIntValue float64
-	elementIntValue = float64(binary.BigEndian.Uint16(reader.Next(2)))
-	switch elementIntValue {
+	elementIntValue = float64(int64(binary.BigEndian.Uint16(reader.Next(2))))
+	switch elementId {
 	case 9:
 		elementName = "Analog Input 1"
 	case 10:
@@ -223,91 +269,141 @@ func parseNTowValue(reader *bytes.Buffer) (values *pb.IOElement) {
 		elementName = "PCB Temperature"
 	case 245:
 		elementName = "Analog Input 4"
+	default:
+		elementName = "default"
 	}
+
+	logger.Info("salaaaaaaaaaaaaaaaaam60",
+		zap.Any("elementIntValue:", elementIntValue),
+		zap.Any("elementId:", elementId),
+		zap.Any("elementName:", elementName),
+	)
 	if values != nil {
 		values.ElementName = elementName
 		values.ElementValue = elementIntValue
 	}
 	return values
 }
-func parseNFourValue(reader *bytes.Buffer) (values *pb.IOElement) {
+func parseNFourValue(reader *bytes.Buffer, elementId uint16) (values *pb.IOElement) {
+	logger, _ := zap.NewDevelopment()
+	defer logger.Sync()
 	var elementName string
+
 	var elementIntValue float64
-	elementIntValue = float64(binary.BigEndian.Uint32(reader.Next(4)))
-	elementName = ""
+	elementIntValue = float64(int64(binary.BigEndian.Uint16(reader.Next(4))))
 	if values != nil {
-		values.ElementName = elementName
+		values.ElementName = strconv.Itoa(int(elementId))
 		values.ElementValue = elementIntValue
 	}
+	logger.Info("salaaaaaaaaaaaaaaaaam60",
+		zap.Any("elementIntValue:", elementIntValue),
+		zap.Any("elementId:", elementId),
+		zap.Any("elementName:", elementName),
+	)
 	return values
 }
-func parseNEightValue(reader *bytes.Buffer) (values []*pb.IOElement) {
+func parseNEightValue(reader *bytes.Buffer, elementId uint16) (values []*pb.IOElement) {
 	var elementItem pb.IOElement
-	var elementIntValue float64
-	elementIntValue = float64(binary.BigEndian.Uint64(reader.Next(8)))
-	switch elementIntValue {
+	var eightbytes = reader.Next(8)
+	var byte1 = eightbytes[0]
+	var byte2 = eightbytes[1]
+	//var byte3= eightbytes[2]
+	var byte4 = eightbytes[3]
+	var byte5 = eightbytes[4]
+	var byte6 = eightbytes[5]
+	var byte7 = eightbytes[6]
+	var byte8 = eightbytes[7]
+	//elementIntValue := float64(binary.BigEndian.Uint64(eightbytes))
+	bitArray1 := ConvertByteToBitArray(eightbytes[0])
+	bitArray2 := ConvertByteToBitArray(eightbytes[1])
+	bitArray3 := ConvertByteToBitArray(eightbytes[2])
+	bitArray4 := ConvertByteToBitArray(eightbytes[3])
+	bitArray5 := ConvertByteToBitArray(eightbytes[4])
+	bitArray6 := ConvertByteToBitArray(eightbytes[5])
+	bitArray7 := ConvertByteToBitArray(eightbytes[6])
+	bitArray8 := ConvertByteToBitArray(eightbytes[7])
+	switch elementId {
 	case 145:
-		elementItem.ElementName = "Vehicle Speed"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(2)))
-		values = append(values, &elementItem)
 
-		elementItem.ElementName = "EngineSpeed_RPM"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(2)))
-		values = append(values, &elementItem)
+		if eightbytes[1] == byte2 {
+			var bytesArr []byte
+			bytesArr[0] = eightbytes[0]
+			bytesArr[1] = eightbytes[1]
+			elementIntValue := float64(binary.BigEndian.Uint64(bytesArr))
+			elementItem.ElementName = "Vehicle Speed"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+		}
+		if eightbytes[3] == byte4 {
+			var bytesArr []byte
+			bytesArr[0] = eightbytes[0]
+			bytesArr[1] = eightbytes[1]
+			bytesArr[2] = eightbytes[2]
+			bytesArr[3] = eightbytes[3]
+			elementIntValue := float64(binary.BigEndian.Uint64(bytesArr))
+			elementItem.ElementName = "EngineSpeed_RPM"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+		}
+		if eightbytes[4] == byte5 {
+			var bytesArr []byte
+			bytesArr[0] = eightbytes[0]
+			bytesArr[1] = eightbytes[1]
+			bytesArr[2] = eightbytes[2]
+			bytesArr[3] = eightbytes[3]
+			bytesArr[4] = eightbytes[4]
+			elementIntValue := float64(binary.BigEndian.Uint64(bytesArr))
+			elementItem.ElementName = "Engine Coolant Temperature"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+		}
 
-		elementItem.ElementName = "Engine Coolant Temperature"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
+		if eightbytes[5] == byte6 {
+			var bytesArr []byte
+			bytesArr[0] = eightbytes[0]
+			bytesArr[1] = eightbytes[1]
+			bytesArr[2] = eightbytes[2]
+			bytesArr[3] = eightbytes[3]
+			bytesArr[4] = eightbytes[4]
+			bytesArr[5] = eightbytes[5]
+			elementIntValue := float64(binary.BigEndian.Uint64(bytesArr))
+			elementItem.ElementName = "Fuel level in tank"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+		}
 
-		elementItem.ElementName = "Fuel level in tank"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
+		if eightbytes[6] == byte7 {
+			var bits = ConvertByteToBitArray(eightbytes[6])
+			if isSameTwoArray(bits, bitArray7) {
+				if bits[0] == bitArray7[0] {
+					elementItem.ElementName = "CheckEngine "
+					elementItem.ElementValue = 999
+					values = append(values, &elementItem)
+				}
+				if bits[1] == bitArray7[1] {
+					elementItem.ElementName = "AirConditionPressureSwitch1 "
+					elementItem.ElementValue = 999
+					values = append(values, &elementItem)
+				}
+				if bits[2] == bitArray7[2] {
+					elementItem.ElementName = "AirConditionPressureSwitch2 "
+					elementItem.ElementValue = 999
+					values = append(values, &elementItem)
+				}
+				if bits[4] == bitArray7[4] {
+					elementItem.ElementName = "GearShiftindicator "
+					elementItem.ElementValue = 999
+					values = append(values, &elementItem)
+				}
+				if bits[7] == bitArray7[7] {
+					elementItem.ElementName = "DesiredGearValue "
+					elementItem.ElementValue = 999
+					values = append(values, &elementItem)
+				}
+			}
 
-		elementItem.ElementName = "CheckEngine !"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-		var b = reader.Next(1)[0]
-		var bitArray = ConvertByteToBitArray(b)
+		}
 
-		elementItem.ElementName = "CheckEngine"
-		elementItem.ElementValue = float64(bitArray[0])
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "AirConditionPressureSwitch1"
-		elementItem.ElementValue = float64(bitArray[1])
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "AirConditionPressureSwitch2"
-		elementItem.ElementValue = float64(bitArray[2])
-		values = append(values, &elementItem)
-
-		//elementItem.ElementName = "GearShiftindicator"
-		//elementItem.ElementValue = float64(binary.BigEndian.Uint32(bitArray[3], bitArray[4]))
-		//values = append(values, &elementItem)
-		//
-		//	elementItem.ElementName = "DesiredGearValue"
-		//	elementItem.ElementValue = float64(bitArray[5,6,7])
-		//values = append(values, &elementItem)
-
-		elementItem.ElementName = "GearShiftindicator !"
-		elementItem.ElementValue = float64(bitArray[3])
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "GearShiftindicator !"
-		elementItem.ElementValue = float64(bitArray[4])
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "DesiredGearValue !"
-		elementItem.ElementValue = float64(bitArray[5])
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "DesiredGearValue !"
-		elementItem.ElementValue = float64(bitArray[6])
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "DesiredGearValue !"
-		elementItem.ElementValue = float64(bitArray[7])
-		values = append(values, &elementItem)
 	case 146:
 		//	var b = reader.Next(1)[0]
 		//	var bitArray = ConvertByteToBitArray(b)
@@ -641,4 +737,7 @@ func ConvertByteToBitArray(b byte) []int {
 	b7 := num & 64
 	b8 := num & 128
 	return []int{b8, b7, b6, b5, b4, b3, b2, b1}
+}
+func isSameTwoArray(a []int, b []int) bool {
+	return reflect.DeepEqual(a, b)
 }

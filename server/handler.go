@@ -50,6 +50,10 @@ func (ts *TeltonikaServer) HandleConnection(conn net.Conn) {
 		go func() {
 			if rawDataErr := ts.avlDB.SaveRawData(ctx, imei, hex.EncodeToString(buf)); rawDataErr != nil {
 				ts.log.Error("save raw data failed", zap.Error(rawDataErr))
+			} else {
+				ts.log.Info("salaaaaaaaaaaaaaaaaam0",
+					zap.Any("elements:", hex.EncodeToString(buf)),
+				)
 			}
 		}()
 

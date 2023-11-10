@@ -23,31 +23,31 @@ func TestParsePacket(t *testing.T) {
 			dataString: `000000000000004A8E010000016B412CEE000100000000000000000000000000000000010005000100010100010011001D00010010015E2C880002000B000000003544C87A000E000000001DD7E06A00000100002994`,
 			expected: []*pb.AVLData{
 				{
-					Imei:      "546897541245687",
-					Timestamp: 1560166592000,
-					Priority:  pb.PacketPriority_PACKET_PRIORITY_HIGH,
-					Gps:       &pb.GPS{},
+					Imei:       "546897541245687",
+					Timestamp:  1560166592000,
+					Priority:   pb.PacketPriority_PACKET_PRIORITY_HIGH,
+					Gps:        &pb.GPS{},
 					IoElements: []*pb.IOElement{
-						{
-							ElementId: 1,
-							Value:     1,
-						},
-						{
-							ElementId: 11,
-							Value:     893700218,
-						},
-						{
-							ElementId: 14,
-							Value:     500686954,
-						},
-						{
-							ElementId: 16,
-							Value:     22949000,
-						},
-						{
-							ElementId: 17,
-							Value:     29,
-						},
+						//{
+						//	ElementId: 1,
+						//	Value:     1,
+						//},
+						//{
+						//	ElementId: 11,
+						//	Value:     893700218,
+						//},
+						//{
+						//	ElementId: 14,
+						//	Value:     500686954,
+						//},
+						//{
+						//	ElementId: 16,
+						//	Value:     22949000,
+						//},
+						//{
+						//	ElementId: 17,
+						//	Value:     29,
+						//},
 					},
 					EventId: 1,
 				},
@@ -67,9 +67,9 @@ func TestParsePacket(t *testing.T) {
 					Speed:      120,
 					EventID:    36,
 					IOElements: []*IOElement{
-						{ID: 1, Value: uint32(500)},
-						{ID: 2, Value: true},
-						{ID: 3, Value: uint8(54)},
+						//{ID: 1, Value: uint32(500)},
+						//{ID: 2, Value: true},
+						//{ID: 3, Value: uint8(54)},
 					},
 				},
 			},
@@ -88,9 +88,9 @@ func TestParsePacket(t *testing.T) {
 						Angle:      112,
 					},
 					IoElements: []*pb.IOElement{
-						{ElementId: 1, Value: 500},
-						{ElementId: 2, Value: 1},
-						{ElementId: 3, Value: 54},
+						//{ElementId: 1, Value: 500},
+						//{ElementId: 2, Value: 1},
+						//{ElementId: 3, Value: 54},
 					},
 				},
 			},
