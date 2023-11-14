@@ -7,12 +7,8 @@ import (
 	"fmt"
 	pb "github.com/irisco88/protos/gen/device/v1"
 	"go.uber.org/zap"
-	"reflect"
-
 	"golang.org/x/exp/slices"
-	//"net"
 	"strconv"
-	//"sync"
 )
 
 var (
@@ -73,11 +69,11 @@ func ParsePacket(data []byte, imei string) ([]*pb.AVLData, error) {
 		//TODO check crc
 		//return nil, ErrCheckCRC
 	}
-	logger.Info("salaaaaaaaaaaaaaaaaam111",
-		zap.Any("crc:", crc),
-		zap.Any("header:", header),
-		zap.Any("calculatedCRC:", calculatedCRC),
-	)
+	//logger.Info("salaaaaaaaaaaaaaaaaam111",
+	//	zap.Any("crc:", crc),
+	//	zap.Any("header:", header),
+	//	zap.Any("calculatedCRC:", calculatedCRC),
+	//)
 	return points, nil
 }
 
@@ -103,17 +99,17 @@ func parseCodec8EPacket(reader *bytes.Buffer, header *Header, imei string) ([]*p
 		Satellites := int32(reader.Next(1)[0])
 		speed := int32(binary.BigEndian.Uint16(reader.Next(2)))
 		eventID := binary.BigEndian.Uint16(reader.Next(2))
-		logger.Info("salaaaaaaaaaaaaaaaaam112",
-			zap.Any("Longitude:", longitude),
-			zap.Any("Latitude:", latitude),
-			zap.Any("Altitude:", altitude),
-			zap.Any("Angle:", angle),
-			zap.Any("Speed:", speed),
-			zap.Any("Satellites:", Satellites),
-			zap.Any("eventID:", eventID),
-			zap.Any("priority:", priority),
-			zap.Any("timestamp:", timestamp),
-		)
+		//logger.Info("salaaaaaaaaaaaaaaaaam112",
+		//	zap.Any("Longitude:", longitude),
+		//	zap.Any("Latitude:", latitude),
+		//	zap.Any("Altitude:", altitude),
+		//	zap.Any("Angle:", angle),
+		//	zap.Any("Speed:", speed),
+		//	zap.Any("Satellites:", Satellites),
+		//	zap.Any("eventID:", eventID),
+		//	zap.Any("priority:", priority),
+		//	zap.Any("timestamp:", timestamp),
+		//)
 		points[i] = &pb.AVLData{
 			Imei:      imei,
 			Timestamp: timestamp,
@@ -148,61 +144,49 @@ func parseCodec8eIOElements(reader *bytes.Buffer) (elements []*pb.IOElement, err
 
 	//total id (N of Total ID)
 	totalElements := binary.BigEndian.Uint16(reader.Next(2))
-	logger.Info("salaaaaaaaaaaaaaaaaam4",
-		zap.Any("totalElements:", totalElements),
-	)
+	fmt.Println(totalElements)
+	//logger.Info("salaaaaaaaaaaaaaaaaam4",
+	//	zap.Any("totalElements:", totalElements),
+	//)
 	//n1 , n2 , n4 , n8
 	for stage := 1; stage <= 4; stage++ {
-
 		//total id in this stage  (N 1|2|4|8 of One Byte Io )
 		stageElements := binary.BigEndian.Uint16(reader.Next(2))
-		logger.Info("salaaaaaaaaaaaaaaaaam5",
-			zap.Any("stageElements:", stageElements),
-		)
 		for elementIndex := uint16(0); elementIndex < stageElements; elementIndex++ {
-			//var (
-			//	elementValue *pb.Value
-			//	elementID    uint16
-			//)
-			//var elementValueArray = []*pb.Value{}
-
-			//logger.Info("salaaaaaaaaaaaaaaaaam5000",
-			//	zap.Any("len:", binary.BigEndian.Uint16(reader.Next(2))),
-			//)
-
 			elementID := binary.BigEndian.Uint16(reader.Next(2))
 			switch stage {
 			case 1: // One byte IO Elements
-
 				elementValue := parseNOneValue(reader, elementID)
 				elements = append(elements, elementValue)
-			//break
+				//logger.Info("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu1",
+				//	zap.Any("elements:", elements),
+				//)
 			case 2: // Two byte IO Elements
 				elementValue := parseNTowValue(reader, elementID)
 				elements = append(elements, elementValue)
+				//logger.Info("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu2",
+				//	zap.Any("elements:", elements),
+				//)
 			case 3: // Four byte IO Elements
 				elementValue := parseNFourValue(reader, elementID)
 				elements = append(elements, elementValue)
+
 			case 4: // Eight byte IO Elements
+				logger.Info("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu3",
+					zap.Any("elements:", "***"),
+				)
 				elementValue := parseNEightValue(reader, elementID)
-				elements = elementValue
+
+				//elements = elementValue
+				elements = append(elements, elementValue...)
+
 			}
 		}
 	}
 	reader.Next(2) //nx
-	logger.Info("salaaaaaaaaaaaaaaaaam9",
-		zap.Any("nx:", reader.Next(2)),
-	)
-	if len(elements) != int(totalElements) {
-		logger.Info("salaaaaaaaaaaaaaaaaam10",
-			zap.Any("total:", totalElements),
-			zap.Any("len:", len(elements)),
-		)
-		return nil, ErrInvalidElementLen
-	}
-	//slices.SortFunc(elements, func(a, b *pb.IOElement) bool {
-	//	return a.ElementName < b.ElementName
-	//})
+	//logger.Info("salaaaaaaaaaaaaaaaaam_final",
+	//	zap.Any("elements", elements),
+	//)
 	return elements, nil
 }
 
@@ -210,10 +194,9 @@ func parseNOneValue(reader *bytes.Buffer, elementId uint16) (values *pb.IOElemen
 	logger, _ := zap.NewDevelopment()
 	defer logger.Sync()
 	var elementName string
-
 	var elementIntValue float64
 	elementIntValue = float64(int64(reader.Next(1)[0]))
-
+	var value pb.IOElement
 	switch elementId {
 	case 1:
 		elementName = "Digital Input 1"
@@ -234,24 +217,22 @@ func parseNOneValue(reader *bytes.Buffer, elementId uint16) (values *pb.IOElemen
 	case 255:
 		elementName = "Over Speeding"
 	default:
-		elementName = "default Value"
+		elementName = strconv.Itoa(int(elementId))
 	}
-	logger.Info("salaaaaaaaaaaaaaaaaam60",
-		zap.Any("elementIntValue:", elementIntValue),
-		zap.Any("elementId:", elementId),
-		zap.Any("elementName:", elementName),
-	)
-	if values != nil {
-		values.ElementName = elementName
-		values.ElementValue = elementIntValue
-	}
-	return values
+	//logger.Info("salaaaaaaaaaaaaaaaaam60_n1",
+	//	zap.Any("elementIntValue_n1:", elementIntValue),
+	//	zap.Any("elementId_n1:", elementId),
+	//	zap.Any("elementName_n1:", elementName),
+	//)
+	value.ElementName = elementName
+	value.ElementValue = elementIntValue
+	return &value
 }
 func parseNTowValue(reader *bytes.Buffer, elementId uint16) (values *pb.IOElement) {
 	logger, _ := zap.NewDevelopment()
 	defer logger.Sync()
 	var elementName string
-
+	var value pb.IOElement
 	var elementIntValue float64
 	elementIntValue = float64(int64(binary.BigEndian.Uint16(reader.Next(2))))
 	switch elementId {
@@ -270,474 +251,1088 @@ func parseNTowValue(reader *bytes.Buffer, elementId uint16) (values *pb.IOElemen
 	case 245:
 		elementName = "Analog Input 4"
 	default:
-		elementName = "default"
+		elementName = strconv.Itoa(int(elementId))
 	}
-
-	logger.Info("salaaaaaaaaaaaaaaaaam60",
-		zap.Any("elementIntValue:", elementIntValue),
-		zap.Any("elementId:", elementId),
-		zap.Any("elementName:", elementName),
-	)
-	if values != nil {
-		values.ElementName = elementName
-		values.ElementValue = elementIntValue
-	}
-	return values
+	//logger.Info("salaaaaaaaaaaaaaaaaam60_n2",
+	//	zap.Any("elementIntValue_n2:", elementIntValue),
+	//	zap.Any("elementId_n2:", elementId),
+	//	zap.Any("elementName_n2:", elementName),
+	//)
+	value.ElementName = elementName
+	value.ElementValue = elementIntValue
+	return &value
 }
 func parseNFourValue(reader *bytes.Buffer, elementId uint16) (values *pb.IOElement) {
 	logger, _ := zap.NewDevelopment()
 	defer logger.Sync()
 	var elementName string
+	var elementIntValue int64
+	var elementIntValues float64
+	var value pb.IOElement
+	elementIntValue = int64(binary.BigEndian.Uint32(reader.Next(4)))
+	elementIntValues = float64(elementIntValue)
+	elementName = strconv.Itoa(int(elementId))
 
-	var elementIntValue float64
-	elementIntValue = float64(int64(binary.BigEndian.Uint16(reader.Next(4))))
-	if values != nil {
-		values.ElementName = strconv.Itoa(int(elementId))
-		values.ElementValue = elementIntValue
-	}
-	logger.Info("salaaaaaaaaaaaaaaaaam60",
-		zap.Any("elementIntValue:", elementIntValue),
-		zap.Any("elementId:", elementId),
-		zap.Any("elementName:", elementName),
-	)
-	return values
+	value.ElementName = elementName
+	value.ElementValue = elementIntValues
+	return &value
 }
-func parseNEightValue(reader *bytes.Buffer, elementId uint16) (values []*pb.IOElement) {
-	var elementItem pb.IOElement
+func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOElement) {
+	logger, _ := zap.NewDevelopment()
+	defer logger.Sync()
 	var eightbytes = reader.Next(8)
-	var byte1 = eightbytes[0]
-	var byte2 = eightbytes[1]
-	//var byte3= eightbytes[2]
+	var byte7 = eightbytes[0]
+	var byte6 = eightbytes[1]
+	var byte5 = eightbytes[2]
 	var byte4 = eightbytes[3]
-	var byte5 = eightbytes[4]
-	var byte6 = eightbytes[5]
-	var byte7 = eightbytes[6]
-	var byte8 = eightbytes[7]
-	//elementIntValue := float64(binary.BigEndian.Uint64(eightbytes))
-	bitArray1 := ConvertByteToBitArray(eightbytes[0])
-	bitArray2 := ConvertByteToBitArray(eightbytes[1])
-	bitArray3 := ConvertByteToBitArray(eightbytes[2])
-	bitArray4 := ConvertByteToBitArray(eightbytes[3])
-	bitArray5 := ConvertByteToBitArray(eightbytes[4])
-	bitArray6 := ConvertByteToBitArray(eightbytes[5])
-	bitArray7 := ConvertByteToBitArray(eightbytes[6])
-	bitArray8 := ConvertByteToBitArray(eightbytes[7])
+	var byte3 = eightbytes[4]
+	var byte2 = eightbytes[5]
+	var byte1 = eightbytes[6]
+	var byte0 = eightbytes[7]
+
+	var values []*pb.IOElement
 	switch elementId {
 	case 145:
-
-		if eightbytes[1] == byte2 {
-			var bytesArr []byte
-			bytesArr[0] = eightbytes[0]
-			bytesArr[1] = eightbytes[1]
-			elementIntValue := float64(binary.BigEndian.Uint64(bytesArr))
+		if eightbytes[1] == byte6 {
+			var elementItem pb.IOElement
+			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte1, byte0}))
+			//elementIntValue=elementIntValue*0.05625
 			elementItem.ElementName = "Vehicle Speed"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+
+			logger.Info("145-1",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[3] == byte4 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint16([]byte{0, 0, 0, 0, eightbytes[3], eightbytes[2], 0, 0}))
+			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte3, byte2}))
+			elementItem.ElementName = "EngineSpeed_RPM"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("145-2",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[4] == byte3 {
+			var elementItem pb.IOElement
+			elementIntValue := float64(eightbytes[4])
+			//elementIntValue=(elementIntValue* 0.75) - 48
+			elementItem.ElementName = "Engine Coolant Temperature"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("145-3",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[5] == byte2 {
+			var elementItem pb.IOElement
+			elementIntValue := float64(eightbytes[5])
+			elementItem.ElementName = "Fuel level in tank"
+			//elementItem.ElementValue = elementIntValue * 0.390625
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("145-4",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[6] == byte1 {
+			var elementItem0 pb.IOElement
+			elementItem0.ElementName = "CheckEngine "
+			elementItem0.ElementValue = float64(getBit(eightbytes[6], 0))
+			values = append(values, &elementItem0)
+			logger.Info("145-5_0",
+				zap.Any("values:", elementItem0.ElementValue),
+			)
+
+			var elementItem1 pb.IOElement
+			elementItem1.ElementName = "AirConditionPressureSwitch1 "
+			elementItem1.ElementValue = float64(getBit(eightbytes[6], 1))
+			values = append(values, &elementItem1)
+			logger.Info("145-5_1",
+				zap.Any("values:", elementItem1.ElementValue),
+			)
+
+			var elementItem2 pb.IOElement
+			elementItem2.ElementName = "AirConditionPressureSwitch2 "
+			elementItem2.ElementValue = float64(getBit(eightbytes[6], 2))
+			values = append(values, &elementItem2)
+			logger.Info("145-5_2",
+				zap.Any("values:", elementItem2.ElementValue),
+			)
+
+			//34
+			var elementItem3 pb.IOElement
+			elementItem3.ElementName = "GearShiftindicator "
+			elementItem3.ElementValue = float64(int((eightbytes[6] & 0x18) >> 3))
+			values = append(values, &elementItem3)
+			logger.Info("145-5_3",
+				zap.Any("values:", elementItem3.ElementValue),
+			)
+
+			//567
+			var elementItem4 pb.IOElement
+			elementItem4.ElementName = "DesiredGearValue "
+			elementItem4.ElementValue = float64(int((eightbytes[6] & 0xe0) >> 5))
+			values = append(values, &elementItem4)
+			logger.Info("145-5_4",
+				zap.Any("values:", elementItem4.ElementValue),
+			)
+		}
+		if eightbytes[7] == byte0 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{eightbytes[7], 0, 0, 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[7])
+			elementItem.ElementName = "Vehicle Type"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("145-6",
+				zap.Any("values:", values),
+			)
+		}
+	case 146:
+		if eightbytes[0] == byte7 {
+			var elementItem0 pb.IOElement
+			elementItem0.ElementName = "Condition immobilizer"
+			//012
+			elementItem0.ElementValue = float64(int(eightbytes[0] & 0x07))
+			values = append(values, &elementItem0)
+			logger.Info("146-1",
+				zap.Any("values:", values),
+			)
+
+			//34
+			var elementItem1 pb.IOElement
+			elementItem1.ElementName = "BrakePedalStatus"
+			elementItem1.ElementValue = float64(int((eightbytes[0] & 0x18) >> 3))
+			values = append(values, &elementItem1)
+			logger.Info("146-2",
+				zap.Any("values:", values),
+			)
+
+			//5
+			var elementItem2 pb.IOElement
+			elementItem2.ElementName = "ClutchPedalStatus "
+			elementItem2.ElementValue = float64(getBit(eightbytes[0], 5))
+			values = append(values, &elementItem2)
+			logger.Info("146-3",
+				zap.Any("values:", values),
+			)
+
+			//67
+			var elementItem3 pb.IOElement
+			elementItem3.ElementName = "GearEngagedStatus "
+			elementItem3.ElementValue = float64(int((eightbytes[0] & 0xC0) >> 5))
+			values = append(values, &elementItem3)
+			logger.Info("146-4",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[1] == byte6 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, eightbytes[1], 0}))
+			elementIntValue := float64(eightbytes[1])
+			elementItem.ElementName = "ActualAccPedal"
+			//elementItem.ElementValue = elementIntValue*0.39063
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("146-5",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[2] == byte5 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, eightbytes[2], 0, 0}))
+			elementIntValue := float64(eightbytes[2])
+			elementItem.ElementName = "EngineThrottlePosition"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("146-6",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[3] == byte4 {
+			var elementItem pb.IOElement
+			elementIntValue := float64(eightbytes[3])
+			elementItem.ElementName = "IndicatedEngineTorque"
+			//elementItem.ElementValue = elementIntValue*0.39063
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("146-7",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[4] == byte3 {
+			var elementItem pb.IOElement
+			elementIntValue := float64(eightbytes[4])
+			elementItem.ElementName = "Engine Friction Torque"
+			//elementItem.ElementValue = elementIntValue *0.39063
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("146-8",
+				zap.Any("values:", values),
+			)
+
+		}
+		if eightbytes[5] == byte2 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, eightbytes[5], 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[5])
+			elementItem.ElementName = "EngineActualTorque"
+			//elementItem.ElementValue = elementIntValue * 0.39063
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("146-9",
+				zap.Any("values:", values),
+			)
+
+		}
+		if eightbytes[6] == byte1 {
+			var elementItem0 pb.IOElement
+			elementItem0.ElementName = "CruiseControlOn_Off "
+			elementItem0.ElementValue = float64(getBit(eightbytes[6], 0))
+			values = append(values, &elementItem0)
+			logger.Info("146-10",
+				zap.Any("values:", values),
+			)
+
+			var elementItem1 pb.IOElement
+			elementItem1.ElementName = "SpeedLimiterOn_Off"
+			elementItem1.ElementValue = float64(getBit(eightbytes[6], 1))
+			values = append(values, &elementItem1)
+			logger.Info("146-11",
+				zap.Any("values:", values),
+			)
+			var elementItem2 pb.IOElement
+			elementItem2.ElementName = "condition cruise control lamp "
+			elementItem2.ElementValue = float64(getBit(eightbytes[6], 2))
+			values = append(values, &elementItem2)
+			logger.Info("146-12",
+				zap.Any("values:", values),
+			)
+
+			var elementItem3 pb.IOElement
+			elementItem3.ElementName = "EngineFuleCutOff"
+			elementItem3.ElementValue = float64(getBit(eightbytes[6], 3))
+			values = append(values, &elementItem3)
+			logger.Info("146-13",
+				zap.Any("values:", values),
+			)
+			var elementItem4 pb.IOElement
+			elementItem4.ElementName = "Condition catalyst heating activated"
+			elementItem4.ElementValue = float64(getBit(eightbytes[6], 4))
+			values = append(values, &elementItem4)
+			logger.Info("146-14",
+				zap.Any("values:", values),
+			)
+			var elementItem5 pb.IOElement
+			elementItem5.ElementName = "AC compressor status"
+			elementItem5.ElementValue = float64(getBit(eightbytes[6], 5))
+			values = append(values, &elementItem5)
+			logger.Info("146-15",
+				zap.Any("values:", values),
+			)
+			var elementItem6 pb.IOElement
+			elementItem6.ElementName = "Condition main relay(Starter Relay)"
+			elementItem6.ElementValue = float64(getBit(eightbytes[6], 6))
+			values = append(values, &elementItem6)
+			logger.Info("146-16",
+				zap.Any("values:", values),
+			)
+			var elementItem7 pb.IOElement
+			elementItem7.ElementName = "Reserve"
+			elementItem7.ElementValue = float64(getBit(eightbytes[6], 7))
+			values = append(values, &elementItem7)
+			logger.Info("146-17",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[7] == byte0 {
+			var elementItem0 pb.IOElement
+			elementItem0.ElementName = "Reserve "
+			elementItem0.ElementValue = float64(getBit(eightbytes[7], 0))
+			values = append(values, &elementItem0)
+			logger.Info("146-18",
+				zap.Any("values:", values),
+			)
+
+			var elementItem1 pb.IOElement
+			elementItem1.ElementName = "Reserve "
+			elementItem1.ElementValue = float64(getBit(eightbytes[7], 1))
+			values = append(values, &elementItem1)
+			logger.Info("146-19",
+				zap.Any("values:", values),
+			)
+			var elementItem2 pb.IOElement
+			elementItem2.ElementName = "Reserve "
+			elementItem2.ElementValue = float64(getBit(eightbytes[7], 2))
+			values = append(values, &elementItem2)
+			logger.Info("146-20",
+				zap.Any("values:", values),
+			)
+			var elementItem3 pb.IOElement
+			elementItem3.ElementName = "Reserve "
+			elementItem3.ElementValue = float64(getBit(eightbytes[7], 3))
+			values = append(values, &elementItem3)
+			logger.Info("146-21",
+				zap.Any("values:", values),
+			)
+			var elementItem4 pb.IOElement
+			elementItem4.ElementName = "Reserve "
+			elementItem4.ElementValue = float64(getBit(eightbytes[7], 4))
+			values = append(values, &elementItem4)
+			logger.Info("146-22",
+				zap.Any("values:", values),
+			)
+			var elementItem5 pb.IOElement
+			elementItem5.ElementName = "Reserve "
+			elementItem5.ElementValue = float64(getBit(eightbytes[7], 5))
+			values = append(values, &elementItem5)
+			logger.Info("146-23",
+				zap.Any("values:", values),
+			)
+			var elementItem6 pb.IOElement
+			elementItem6.ElementName = "Reserve "
+			elementItem6.ElementValue = float64(getBit(eightbytes[7], 6))
+			values = append(values, &elementItem6)
+			logger.Info("146-24",
+				zap.Any("values:", values),
+			)
+			var elementItem7 pb.IOElement
+			elementItem7.ElementName = "Reserve "
+			elementItem7.ElementValue = float64(getBit(eightbytes[7], 7))
+			values = append(values, &elementItem7)
+			logger.Info("146-25",
+				zap.Any("values:", values),
+			)
+		}
+	case 147:
+		logger.Info("147-0",
+			zap.Any("values:", values),
+		)
+		if eightbytes[5] == byte2 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, eightbytes[5], eightbytes[4], eightbytes[3], eightbytes[2], eightbytes[1], eightbytes[0]}))
+			elementIntValue := float64(binary.BigEndian.Uint32([]byte{byte2, byte3, byte4, byte5, byte6, byte7}))
+			elementItem.ElementName = "distance"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("147-1",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[6] == byte1 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, eightbytes[6], 0, 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[6])
+			elementItem.ElementName = "ActualAccPedal"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("147-2",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[7] == byte0 {
+			var elementItem pb.IOElement
+			elementIntValue := float64(eightbytes[7])
+			elementItem.ElementName = "Intake air temperature"
+			//elementItem.ElementValue = (elementIntValue * 0.75) - 48
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("147-3",
+				zap.Any("values:", values),
+			)
+		}
+	case 148:
+		logger.Info("148-0",
+			zap.Any("values:", values),
+		)
+		if eightbytes[1] == byte6 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, eightbytes[1], eightbytes[0]}))
+			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte6, byte7}))
+			elementItem.ElementName = "DesiredSpeed"
+			//elementItem.ElementValue = elementIntValue*0.125
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("147-1",
+				zap.Any("values:", values),
+			)
+
+		}
+		if eightbytes[2] == byte5 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, eightbytes[2], 0, 0}))
+			elementIntValue := float64(eightbytes[2])
+			elementItem.ElementName = "Oil temperature(TCU)"
+			//elementItem.ElementValue = elementIntValue-40
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("148-2",
+				zap.Any("values:", values),
+			)
+
+		}
+		if eightbytes[3] == byte4 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, eightbytes[3], 0, 0, 0}))
+			elementIntValue := float64(eightbytes[3])
+			elementItem.ElementName = "Ambient air temperature"
+			//elementItem.ElementValue = (elementIntValue* 0.5) - 40
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("148-3",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[4] == byte3 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, eightbytes[4], 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[4])
+			elementItem.ElementName = "Number of DTC"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("148-4",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[5] == byte2 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, eightbytes[5], 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[5])
+			elementItem.ElementName = "EMS_DTC"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("148-5",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[6] == byte1 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, eightbytes[6], 0, 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[6])
+			elementItem.ElementName = "ABS_DTC"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("148-6",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[7] == byte0 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{eightbytes[7], 0, 0, 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[7])
+			elementItem.ElementName = "BCM_DTC"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("148-7",
+				zap.Any("values:", values),
+			)
+		}
+	case 149:
+		logger.Info("149-0",
+			zap.Any("values:", values),
+		)
+		if eightbytes[0] == byte7 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, 0, eightbytes[0]}))
+			elementIntValue := float64(eightbytes[0])
+			elementItem.ElementName = "ACU_DTC"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("149-1",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[1] == byte6 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, eightbytes[1], 0}))
+			elementIntValue := float64(eightbytes[1])
+			elementItem.ElementName = "ESC_DTC"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("149-2",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[2] == byte5 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, eightbytes[2], 0, 0}))
+			elementIntValue := float64(eightbytes[2])
+			elementItem.ElementName = "ICN_DTC"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("149-3",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[3] == byte4 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, eightbytes[3], 0, 0, 0}))
+			elementIntValue := float64(eightbytes[3])
+			elementItem.ElementName = "EPS_DTC"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("149-4",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[4] == byte3 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, eightbytes[4], 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[4])
+			elementItem.ElementName = "CAS_DTC"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("149-5",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[5] == byte2 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, eightbytes[5], 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[5])
+			elementItem.ElementName = "FCM/FN_DTC"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("149-6",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[6] == byte1 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, eightbytes[6], 0, 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[6])
+			elementItem.ElementName = "ICU_DTC"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("149-7",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[7] == byte0 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{eightbytes[7], 0, 0, 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[7])
+			elementItem.ElementName = "Reserve_DTC"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("149-8",
+				zap.Any("values:", values),
+			)
+		}
+	case 150:
+		logger.Info("150-0",
+			zap.Any("values:", values),
+		)
+		if eightbytes[0] == byte7 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, 0, eightbytes[0]}))
+			elementIntValue := float64(eightbytes[0])
+			elementItem.ElementName = "Sensor1_high"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("150-1",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[1] == byte6 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, eightbytes[1], 0}))
+			elementIntValue := float64(eightbytes[1])
+			elementItem.ElementName = "Sensor1_low"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("150-2",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[2] == byte5 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, eightbytes[2], 0, 0}))
+			elementIntValue := float64(eightbytes[2])
+			elementItem.ElementName = "Sensor2_high"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("150-3",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[3] == byte4 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, eightbytes[3], 0, 0, 0}))
+			elementIntValue := float64(eightbytes[3])
+			elementItem.ElementName = "Sensor2_low"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("150-4",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[4] == byte3 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, eightbytes[4], 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[4])
+			elementItem.ElementName = "Sensor3_high"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("150-5",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[5] == byte2 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, eightbytes[5], 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[5])
+			elementItem.ElementName = "Sensor3_low"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("150-6",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[6] == byte1 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, eightbytes[6], 0, 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[6])
+			elementItem.ElementName = "Sensor4_high"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("150-7",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[7] == byte0 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{eightbytes[7], 0, 0, 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[7])
+			elementItem.ElementName = "Sensor4_low"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("150-8",
+				zap.Any("values:", values),
+			)
+		}
+	case 151:
+		logger.Info("151-0",
+			zap.Any("values:", values),
+		)
+		if eightbytes[0] == byte7 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, 0, eightbytes[0]}))
+			elementIntValue := float64(eightbytes[0])
+			elementItem.ElementName = "Sensor5_high"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("151-1",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[1] == byte6 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, eightbytes[1], 0}))
+			elementIntValue := float64(eightbytes[1])
+			elementItem.ElementName = "Sensor5_low"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("151-2",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[2] == byte5 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, eightbytes[2], 0, 0}))
+			elementIntValue := float64(eightbytes[2])
+			elementItem.ElementName = "Sensor6_high"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("151-3",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[3] == byte4 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, eightbytes[3], 0, 0, 0}))
+			elementIntValue := float64(eightbytes[3])
+			elementItem.ElementName = "Sensor6_low"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("151-4",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[4] == byte3 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, eightbytes[4], 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[4])
+			elementItem.ElementName = "Sensor7_high"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("151-5",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[5] == byte2 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, eightbytes[5], 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[5])
+			elementItem.ElementName = "Sensor7_low"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("151-6",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[6] == byte1 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, eightbytes[6], 0, 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[6])
+			elementItem.ElementName = "Sensor8_high"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("151-7",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[7] == byte0 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{eightbytes[7], 0, 0, 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[7])
+			elementItem.ElementName = "Sensor8_low"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("151-8",
+				zap.Any("values:", values),
+			)
+		}
+	case 152:
+		logger.Info("152-0",
+			zap.Any("values:", values),
+		)
+		if eightbytes[0] == byte7 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, 0, eightbytes[0]}))
+			elementIntValue := float64(eightbytes[0])
+			elementItem.ElementName = "Sensor9_high"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("152-1",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[1] == byte6 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, eightbytes[1], 0}))
+			elementIntValue := float64(eightbytes[1])
+			elementItem.ElementName = "Sensor9_low"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("152-2",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[2] == byte5 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, eightbytes[2], 0, 0}))
+			elementIntValue := float64(eightbytes[2])
+			elementItem.ElementName = "Sensor10_high"
 			elementItem.ElementValue = elementIntValue
 			values = append(values, &elementItem)
 		}
 		if eightbytes[3] == byte4 {
-			var bytesArr []byte
-			bytesArr[0] = eightbytes[0]
-			bytesArr[1] = eightbytes[1]
-			bytesArr[2] = eightbytes[2]
-			bytesArr[3] = eightbytes[3]
-			elementIntValue := float64(binary.BigEndian.Uint64(bytesArr))
-			elementItem.ElementName = "EngineSpeed_RPM"
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, eightbytes[3], 0, 0, 0}))
+			elementIntValue := float64(eightbytes[3])
+			elementItem.ElementName = "Sensor10_low"
 			elementItem.ElementValue = elementIntValue
 			values = append(values, &elementItem)
+			logger.Info("152-3",
+				zap.Any("values:", values),
+			)
 		}
-		if eightbytes[4] == byte5 {
-			var bytesArr []byte
-			bytesArr[0] = eightbytes[0]
-			bytesArr[1] = eightbytes[1]
-			bytesArr[2] = eightbytes[2]
-			bytesArr[3] = eightbytes[3]
-			bytesArr[4] = eightbytes[4]
-			elementIntValue := float64(binary.BigEndian.Uint64(bytesArr))
-			elementItem.ElementName = "Engine Coolant Temperature"
+		if eightbytes[4] == byte3 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, eightbytes[4], 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[4])
+			elementItem.ElementName = "Sensor11_high"
 			elementItem.ElementValue = elementIntValue
 			values = append(values, &elementItem)
+			logger.Info("152-4",
+				zap.Any("values:", values),
+			)
 		}
-
-		if eightbytes[5] == byte6 {
-			var bytesArr []byte
-			bytesArr[0] = eightbytes[0]
-			bytesArr[1] = eightbytes[1]
-			bytesArr[2] = eightbytes[2]
-			bytesArr[3] = eightbytes[3]
-			bytesArr[4] = eightbytes[4]
-			bytesArr[5] = eightbytes[5]
-			elementIntValue := float64(binary.BigEndian.Uint64(bytesArr))
-			elementItem.ElementName = "Fuel level in tank"
+		if eightbytes[5] == byte2 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, eightbytes[5], 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[5])
+			elementItem.ElementName = "Sensor11_low"
 			elementItem.ElementValue = elementIntValue
 			values = append(values, &elementItem)
+			logger.Info("152-5",
+				zap.Any("values:", values),
+			)
 		}
-
-		if eightbytes[6] == byte7 {
-			var bits = ConvertByteToBitArray(eightbytes[6])
-			if isSameTwoArray(bits, bitArray7) {
-				if bits[0] == bitArray7[0] {
-					elementItem.ElementName = "CheckEngine "
-					elementItem.ElementValue = 999
-					values = append(values, &elementItem)
-				}
-				if bits[1] == bitArray7[1] {
-					elementItem.ElementName = "AirConditionPressureSwitch1 "
-					elementItem.ElementValue = 999
-					values = append(values, &elementItem)
-				}
-				if bits[2] == bitArray7[2] {
-					elementItem.ElementName = "AirConditionPressureSwitch2 "
-					elementItem.ElementValue = 999
-					values = append(values, &elementItem)
-				}
-				if bits[4] == bitArray7[4] {
-					elementItem.ElementName = "GearShiftindicator "
-					elementItem.ElementValue = 999
-					values = append(values, &elementItem)
-				}
-				if bits[7] == bitArray7[7] {
-					elementItem.ElementName = "DesiredGearValue "
-					elementItem.ElementValue = 999
-					values = append(values, &elementItem)
-				}
-			}
-
+		if eightbytes[6] == byte1 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, eightbytes[6], 0, 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[6])
+			elementItem.ElementName = "Sensor12_high"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("152-6",
+				zap.Any("values:", values),
+			)
 		}
-
-	case 146:
-		//	var b = reader.Next(1)[0]
-		//	var bitArray = ConvertByteToBitArray(b)
-		//
-		//	elementItem.ElementName = "Condition immobilizer"
-		//	elementItem.ElementValue = float64(bitArray[0,
-		//	1, 2])
-		//values = append(values, &elementItem)
-		//
-		//elementItem.ElementName = "BrakePedalStatus"
-		//elementItem.ElementValue = float64(bitArray[3, 4])
-		//values = append(values, &elementItem)
-		//
-		//elementItem.ElementName = "ClutchPedalStatus"
-		//elementItem.ElementValue = float64(bitArray[5])
-		//values = append(values, &elementItem)
-		//
-		//elementItem.ElementName = "GearEngagedStatus"
-		//elementItem.ElementValue = float64(bitArray[6, 7])
-		//values = append(values, &elementItem)
-		elementItem.ElementName = "Condition immobilizer !"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "ActualAccPedal"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "EngineThrottlePosition"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "IndicatedEngineTorque"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Engine Friction Torque"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "EngineActualTorque"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		//var b = reader.Next(1)[0]
-		//var bitArray = ConvertByteToBitArray(b)
-		//
-		//elementItem.ElementName = "CruiseControlOn_Off"
-		//elementItem.ElementValue = float64(bitArray[0])
-		//
-		//elementItem.ElementName = "SpeedLimiterOn_Off"
-		//elementItem.ElementValue = float64(bitArray[1])
-		//
-		//elementItem.ElementName = "condition cruise control lamp"
-		//elementItem.ElementValue = float64(bitArray[2])
-		//
-		//elementItem.ElementName = "EngineFuleCutOff"
-		//elementItem.ElementValue = float64(bitArray[3])
-		//
-		//elementItem.ElementName = "Condition catalyst heating activated"
-		//elementItem.ElementValue = float64(bitArray[4])
-		//
-		//elementItem.ElementName = "AC compressor status"
-		//elementItem.ElementValue = float64(bitArray[5])
-		//
-		//elementItem.ElementName = "Condition main relay -----> Starter Relay"
-		//elementItem.ElementValue = float64(bitArray[6])
-		//
-		//elementItem.ElementName = "Reserve"
-		//elementItem.ElementValue = float64(bitArray[7])
-		elementItem.ElementName = "CruiseControlOn_Off !"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Reserve"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-	case 147:
-		elementItem.ElementName = "distance"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(5)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "ActualAccPedal"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Intake air temperature"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-	case 148:
-		elementItem.ElementName = "DesiredSpeed"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(2)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Oil temperature------>TCU"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Ambient air temperature"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Number of DTC"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "EMS_DTC"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "ABS_DTC"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "BCM_DTC"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-	case 149:
-		elementItem.ElementName = "ACU_DTC"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "ESC_DTC"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "ICN_DTC"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(2)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "EPS_DTC"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "CAS_DTC"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "FCM/FN_DTC"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "ICU_DTC"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Reserve_DTC"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-	case 150:
-		elementItem.ElementName = "Sensor1_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor1_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor2_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor2_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor3_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor3_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor4_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor4_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-	case 151:
-		elementItem.ElementName = "Sensor5_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor5_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor6_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor6_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor7_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor7_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor8_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor8_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-	case 152:
-		elementItem.ElementName = "Sensor9_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor9_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor10_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor10_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor11_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor11_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor12_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor12_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
+		if eightbytes[7] == byte0 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{eightbytes[7], 0, 0, 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[7])
+			elementItem.ElementName = "Sensor12_low"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("152-7",
+				zap.Any("values:", values),
+			)
+		}
 
 	case 153:
-		elementItem.ElementName = "Sensor13_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
+		logger.Info("153-0",
+			zap.Any("values:", values),
+		)
+		if eightbytes[0] == byte7 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, 0, eightbytes[0]}))
+			elementIntValue := float64(eightbytes[0])
+			elementItem.ElementName = "Sensor13_high"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("153-1",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[1] == byte6 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, eightbytes[1], 0}))
+			elementIntValue := float64(eightbytes[1])
+			elementItem.ElementName = "Sensor13_low"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("153-2",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[2] == byte5 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, eightbytes[2], 0, 0}))
+			elementIntValue := float64(eightbytes[2])
+			elementItem.ElementName = "Sensor14_high"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("153-3",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[3] == byte4 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, eightbytes[3], 0, 0, 0}))
+			elementIntValue := float64(eightbytes[3])
+			elementItem.ElementName = "Sensor14_low"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("153-4",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[4] == byte3 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, eightbytes[4], 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[4])
+			elementItem.ElementName = "Sensor15_high"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("153-5",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[5] == byte2 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, eightbytes[5], 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[5])
+			elementItem.ElementName = "Sensor15_low"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("153-6",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[6] == byte1 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, eightbytes[6], 0, 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[6])
+			elementItem.ElementName = "Sensor16_high"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("153-7",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[7] == byte0 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{eightbytes[7], 0, 0, 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[7])
+			elementItem.ElementName = "Sensor16_low"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("153-8",
+				zap.Any("values:", values),
+			)
+		}
 
-		elementItem.ElementName = "Sensor13_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor14_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor14_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor15_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor15_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor16_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor16_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
 	case 154:
-		elementItem.ElementName = "Sensor17_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
+		logger.Info("154-0",
+			zap.Any("values:", values),
+		)
+		if eightbytes[0] == byte7 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, 0, eightbytes[0]}))
+			elementIntValue := float64(eightbytes[0])
+			elementItem.ElementName = "Sensor17_high"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("154-1",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[1] == byte6 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, eightbytes[1], 0}))
+			elementIntValue := float64(eightbytes[1])
+			elementItem.ElementName = "Sensor17_low"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("154-2",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[2] == byte5 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, eightbytes[2], 0, 0}))
+			elementIntValue := float64(eightbytes[2])
+			elementItem.ElementName = "Sensor18_high"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("154-3",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[3] == byte4 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, eightbytes[3], 0, 0, 0}))
+			elementIntValue := float64(eightbytes[3])
+			elementItem.ElementName = "Sensor18_low"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("154-4",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[4] == byte3 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, eightbytes[4], 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[4])
+			elementItem.ElementName = "Sensor19_high"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
+			logger.Info("154-5",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[5] == byte2 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, eightbytes[5], 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[5])
+			elementItem.ElementName = "Sensor19_low"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
 
-		elementItem.ElementName = "Sensor17_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
+			logger.Info("154-6",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[6] == byte1 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, eightbytes[6], 0, 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[6])
+			elementItem.ElementName = "Sensor20_high"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
 
-		elementItem.ElementName = "Sensor18_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
+			logger.Info("154-7",
+				zap.Any("values:", values),
+			)
+		}
+		if eightbytes[7] == byte0 {
+			var elementItem pb.IOElement
+			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{eightbytes[7], 0, 0, 0, 0, 0, 0, 0}))
+			elementIntValue := float64(eightbytes[7])
+			elementItem.ElementName = "Sensor20_low"
+			elementItem.ElementValue = elementIntValue
+			values = append(values, &elementItem)
 
-		elementItem.ElementName = "Sensor18_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
+			logger.Info("154-8",
+				zap.Any("values:", values),
+			)
+		}
 
-		elementItem.ElementName = "Sensor19_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor19_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor20_low"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
-		values = append(values, &elementItem)
-
-		elementItem.ElementName = "Sensor20_high"
-		elementItem.ElementValue = float64(binary.BigEndian.Uint32(reader.Next(1)))
+	default:
+		var elementItem pb.IOElement
+		elementItem.ElementName = strconv.Itoa(int(elementId))
+		elementItem.ElementValue = 999
 		values = append(values, &elementItem)
 
 	}
 	return values
 }
 
-func ConvertByteToBitArray(b byte) []int {
-	var byteString = string(b)
-	num, _ := strconv.Atoi(byteString)
-	b1 := num & 1
-	b2 := num & 2
-	b3 := num & 4
-	b4 := num & 8
-	b5 := num & 16
-	b6 := num & 32
-	b7 := num & 64
-	b8 := num & 128
-	return []int{b8, b7, b6, b5, b4, b3, b2, b1}
+//	func ConvertByteToBitArray(b byte) byte {
+//		//var byteString = string(b)
+//		//num, _ := strconv.Atoi(byteString)
+//		var bitArray byte
+//		for i := 0; i < 8; i++ {
+//			bit := (b >> i) & 1
+//			bitArray = append(bitArray, bit)
+//		}
+//		return bitArray
+//	}
+func ConvertByteToBitArray(byte byte) []int {
+	bits := make([]int, 8)
+	for i := 0; i < 8; i++ {
+		bit := (byte >> i) & 1
+		bits[i] = int(bit)
+	}
+
+	return Reverser(bits)
 }
-func isSameTwoArray(a []int, b []int) bool {
-	return reflect.DeepEqual(a, b)
+
+func Reverser(b []int) []int {
+	bitsRver := make([]int, 8)
+	bitsRver[0] = b[7]
+	bitsRver[1] = b[6]
+	bitsRver[2] = b[5]
+	bitsRver[3] = b[4]
+	bitsRver[4] = b[3]
+	bitsRver[5] = b[2]
+	bitsRver[6] = b[1]
+	bitsRver[7] = b[0]
+	return bitsRver
+}
+
+func getBit(byteValue byte, bitPosition uint) int {
+	// Shift the bit to the rightmost position
+	shiftedBit := byteValue >> bitPosition
+	// Use bitwise AND with 1 to extract the rightmost bit
+	result := int(shiftedBit & 1)
+	return result
 }
