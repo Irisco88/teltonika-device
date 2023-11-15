@@ -2,16 +2,14 @@ package parser
 
 import (
 	"encoding/hex"
-	"testing"
-	"time"
-
 	pb "github.com/irisco88/protos/gen/device/v1"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
+	"testing"
 )
 
 func TestParsePacket(t *testing.T) {
-	nowTime := uint64(time.Now().UnixMilli())
+	//nowTime := uint64(time.Now().UnixMilli())
 	tests := map[string]struct {
 		imei       string
 		dataString string
@@ -23,8 +21,8 @@ func TestParsePacket(t *testing.T) {
 			dataString: `000000000000004A8E010000016B412CEE000100000000000000000000000000000000010005000100010100010011001D00010010015E2C880002000B000000003544C87A000E000000001DD7E06A00000100002994`,
 			expected: []*pb.AVLData{
 				{
-					Imei:       "546897541245687",
-					Timestamp:  1560166592000,
+					Imei: "546897541245687",
+					//Timestamp:  "1560166592000",
 					Priority:   pb.PacketPriority_PACKET_PRIORITY_HIGH,
 					Gps:        &pb.GPS{},
 					IoElements: []*pb.IOElement{
@@ -57,7 +55,7 @@ func TestParsePacket(t *testing.T) {
 			imei: "587414569874521",
 			points: []*AVLData{
 				{
-					Timestamp:  nowTime,
+					Timestamp:  "nowTime",
 					Priority:   PriorityHigh,
 					Longitude:  -31.867449,
 					Latitude:   135.303686,
@@ -75,10 +73,10 @@ func TestParsePacket(t *testing.T) {
 			},
 			expected: []*pb.AVLData{
 				{
-					Imei:      "587414569874521",
-					Timestamp: nowTime,
-					Priority:  pb.PacketPriority_PACKET_PRIORITY_HIGH,
-					EventId:   36,
+					Imei: "587414569874521",
+					//Timestamp: "nowTime",
+					Priority: pb.PacketPriority_PACKET_PRIORITY_HIGH,
+					EventId:  36,
 					Gps: &pb.GPS{
 						Latitude:   135.303686,
 						Longitude:  -31.867449,

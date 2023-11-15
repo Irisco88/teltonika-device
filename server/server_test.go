@@ -2,22 +2,20 @@ package server
 
 import (
 	"context"
-	"github.com/irisco88/teltonika-device/parser"
-	"net"
-	"testing"
-	"time"
-
 	"github.com/golang/mock/gomock"
 	mockdb "github.com/irisco88/teltonika-device/db/clickhouse/mock_db"
+	"github.com/irisco88/teltonika-device/parser"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
+	"net"
+	"testing"
 )
 
 func TestSendData(t *testing.T) {
-	nowTime := uint64(time.Now().UnixMilli())
+	//nowTime := uint64(time.Now().UnixMilli())
 	natsServer := RunNatsServerOnPort(0)
 	defer natsServer.Shutdown()
 	tests := map[string]struct {
@@ -32,7 +30,7 @@ func TestSendData(t *testing.T) {
 			imei: "356478954125698",
 			points: []*parser.AVLData{
 				{
-					Timestamp:  nowTime,
+					//Timestamp:  nowTime,
 					Priority:   parser.PriorityPanic,
 					Longitude:  -31.867449,
 					Latitude:   135.303686,

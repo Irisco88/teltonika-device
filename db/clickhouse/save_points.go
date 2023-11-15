@@ -2,10 +2,8 @@ package clickhouse
 
 import (
 	"context"
-	"go.uber.org/zap"
-	"time"
-
 	pb "github.com/irisco88/protos/gen/device/v1"
+	"go.uber.org/zap"
 )
 
 const insertAvlPointQuery = `
@@ -44,7 +42,8 @@ func (adb *AVLDataBase) SaveAvlPoints(ctx context.Context, points []*pb.AVLData)
 		}
 		err := batch.Append(
 			point.GetImei(),
-			time.UnixMilli(int64(point.GetTimestamp())),
+			//time.UnixMilli(int64(point.GetTimestamp())),
+			point.GetTimestamp(),
 			point.Priority.String(),
 			gps.GetLongitude(),
 			gps.GetLatitude(),

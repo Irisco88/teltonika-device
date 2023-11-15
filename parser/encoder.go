@@ -5,7 +5,8 @@ import (
 )
 
 type AVLData struct {
-	Timestamp     uint64
+	Timestamps    uint64
+	Timestamp     string
 	Priority      PacketPriority
 	Longitude     float64
 	Latitude      float64
@@ -55,7 +56,7 @@ func EncodeCodec8ExtendedAVLData(points []*AVLData) ([]byte, error) {
 	var data []byte
 	for _, point := range points {
 		// Timestamp (8 bytes)
-		data = binary.BigEndian.AppendUint64(data, point.Timestamp)
+		data = binary.BigEndian.AppendUint64(data, point.Timestamps)
 
 		// Priority (1 byte)
 		data = append(data, uint8(point.Priority))

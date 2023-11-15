@@ -7,8 +7,8 @@ import (
 	"fmt"
 	pb "github.com/irisco88/protos/gen/device/v1"
 	"go.uber.org/zap"
-	"golang.org/x/exp/slices"
 	"strconv"
+	"time"
 )
 
 var (
@@ -76,14 +76,39 @@ func ParsePacket(data []byte, imei string) ([]*pb.AVLData, error) {
 	//)
 	return points, nil
 }
-
+func convertToDate(epochTimestamp int64) string {
+	// Check if the epoch timestamp is in seconds, convert to milliseconds if needed
+	if epochTimestamp <= 9999999999 {
+		epochTimestamp *= 1000
+	}
+	logger, _ := zap.NewDevelopment()
+	defer logger.Sync()
+	logger.Info("time**************************************************1",
+		zap.Any("time2:", epochTimestamp),
+	)
+	// Convert epoch timestamp to time.Time
+	timeValue := time.Unix(0, epochTimestamp*int64(time.Millisecond))
+	logger.Info("time**************************************************2",
+		zap.Any("time2:", timeValue),
+	)
+	// Format time in a desired layout
+	dateString := timeValue.Format("2006-01-02 15:04:05 MST")
+	logger.Info("time**************************************************3",
+		zap.Any("time2:", dateString),
+	)
+	return dateString
+}
 func parseCodec8EPacket(reader *bytes.Buffer, header *Header, imei string) ([]*pb.AVLData, error) {
 	logger, _ := zap.NewDevelopment()
 	defer logger.Sync()
-
 	points := make([]*pb.AVLData, header.NumberOfData)
 	for i := uint8(0); i < header.NumberOfData; i++ {
-		timestamp := binary.BigEndian.Uint64(reader.Next(8))
+		timestamps := binary.BigEndian.Uint64(reader.Next(8))
+		timestamp := convertToDate(int64(timestamps))
+		logger.Info("time**************************************************",
+			zap.Any("time:", convertToDate(int64(timestamps))),
+			zap.Any("time2:", timestamp),
+		)
 		priority := reader.Next(1)[0]
 		// GPS Element
 		longitude := int32(binary.BigEndian.Uint32(reader.Next(4)))
@@ -99,17 +124,6 @@ func parseCodec8EPacket(reader *bytes.Buffer, header *Header, imei string) ([]*p
 		Satellites := int32(reader.Next(1)[0])
 		speed := int32(binary.BigEndian.Uint16(reader.Next(2)))
 		eventID := binary.BigEndian.Uint16(reader.Next(2))
-		//logger.Info("salaaaaaaaaaaaaaaaaam112",
-		//	zap.Any("Longitude:", longitude),
-		//	zap.Any("Latitude:", latitude),
-		//	zap.Any("Altitude:", altitude),
-		//	zap.Any("Angle:", angle),
-		//	zap.Any("Speed:", speed),
-		//	zap.Any("Satellites:", Satellites),
-		//	zap.Any("eventID:", eventID),
-		//	zap.Any("priority:", priority),
-		//	zap.Any("timestamp:", timestamp),
-		//)
 		points[i] = &pb.AVLData{
 			Imei:      imei,
 			Timestamp: timestamp,
@@ -124,24 +138,20 @@ func parseCodec8EPacket(reader *bytes.Buffer, header *Header, imei string) ([]*p
 				Satellites: Satellites,
 			},
 		}
-
 		elements, err := parseCodec8eIOElements(reader)
-
 		if err != nil {
 			return nil, fmt.Errorf("parse io elements failed:%v", err)
 		}
 		points[i].IoElements = elements
 	}
-	slices.SortFunc(points, func(a, b *pb.AVLData) bool {
-		return a.Timestamp < b.Timestamp
-	})
+	//slices.SortFunc(points, func(a, b *pb.AVLData) bool {
+	//	return a.Timestamp < b.Timestamp
+	//})
 	return points, nil
 }
-
 func parseCodec8eIOElements(reader *bytes.Buffer) (elements []*pb.IOElement, err error) {
 	logger, _ := zap.NewDevelopment()
 	defer logger.Sync()
-
 	//total id (N of Total ID)
 	totalElements := binary.BigEndian.Uint16(reader.Next(2))
 	fmt.Println(totalElements)
@@ -170,16 +180,13 @@ func parseCodec8eIOElements(reader *bytes.Buffer) (elements []*pb.IOElement, err
 			case 3: // Four byte IO Elements
 				elementValue := parseNFourValue(reader, elementID)
 				elements = append(elements, elementValue)
-
 			case 4: // Eight byte IO Elements
 				logger.Info("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu3",
 					zap.Any("elements:", "***"),
 				)
 				elementValue := parseNEightValue(reader, elementID)
-
 				//elements = elementValue
 				elements = append(elements, elementValue...)
-
 			}
 		}
 	}
@@ -300,7 +307,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementItem.ElementName = "Vehicle Speed"
 			elementItem.ElementValue = elementIntValue
 			values = append(values, &elementItem)
-
 			logger.Info("145-1",
 				zap.Any("values:", values),
 			)
@@ -346,7 +352,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			logger.Info("145-5_0",
 				zap.Any("values:", elementItem0.ElementValue),
 			)
-
 			var elementItem1 pb.IOElement
 			elementItem1.ElementName = "AirConditionPressureSwitch1 "
 			elementItem1.ElementValue = float64(getBit(eightbytes[6], 1))
@@ -354,7 +359,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			logger.Info("145-5_1",
 				zap.Any("values:", elementItem1.ElementValue),
 			)
-
 			var elementItem2 pb.IOElement
 			elementItem2.ElementName = "AirConditionPressureSwitch2 "
 			elementItem2.ElementValue = float64(getBit(eightbytes[6], 2))
@@ -362,7 +366,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			logger.Info("145-5_2",
 				zap.Any("values:", elementItem2.ElementValue),
 			)
-
 			//34
 			var elementItem3 pb.IOElement
 			elementItem3.ElementName = "GearShiftindicator "
@@ -371,7 +374,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			logger.Info("145-5_3",
 				zap.Any("values:", elementItem3.ElementValue),
 			)
-
 			//567
 			var elementItem4 pb.IOElement
 			elementItem4.ElementName = "DesiredGearValue "
