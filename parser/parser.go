@@ -79,7 +79,7 @@ func convertToDate(epochTimestamp int64) string {
 	// Convert to Tehran local time
 	tehranLocalTime := timeValue.In(tehranLocation)
 	// Format time in a desired layout
-	dateString := tehranLocalTime.Format("2006-01-02 15:04:05 MST")
+	dateString := tehranLocalTime.Format("2006-01-02 15:04:05")
 	return dateString
 }
 func parseCodec8EPacket(reader *bytes.Buffer, header *Header, imei string) ([]*pb.AVLData, error) {
