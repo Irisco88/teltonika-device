@@ -67,14 +67,19 @@ func ParsePacket(data []byte, imei string) ([]*pb.AVLData, error) {
 	return points, nil
 }
 func convertToDate(epochTimestamp int64) string {
-	// Check if the epoch timestamp is in seconds, convert to milliseconds if needed
 	if epochTimestamp <= 9999999999 {
 		epochTimestamp *= 1000
 	}
 	// Convert epoch timestamp to time.Time
 	timeValue := time.Unix(0, epochTimestamp*int64(time.Millisecond))
+	tehranLocation, err := time.LoadLocation("Asia/Tehran")
+	if err != nil {
+		fmt.Println("Error loading Tehran location:", err)
+	}
+	// Convert to Tehran local time
+	tehranLocalTime := timeValue.In(tehranLocation)
 	// Format time in a desired layout
-	dateString := timeValue.Format("2006-01-02 15:04:05 MST")
+	dateString := tehranLocalTime.Format("2006-01-02 15:04:05 MST")
 	return dateString
 }
 func parseCodec8EPacket(reader *bytes.Buffer, header *Header, imei string) ([]*pb.AVLData, error) {
@@ -117,9 +122,6 @@ func parseCodec8EPacket(reader *bytes.Buffer, header *Header, imei string) ([]*p
 		}
 		points[i].IoElements = elements
 	}
-	//slices.SortFunc(points, func(a, b *pb.AVLData) bool {
-	//	return a.Timestamp < b.Timestamp
-	//})
 	return points, nil
 }
 func parseCodec8eIOElements(reader *bytes.Buffer) (elements []*pb.IOElement, err error) {
@@ -247,7 +249,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[3] == byte4 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint16([]byte{0, 0, 0, 0, eightbytes[3], eightbytes[2], 0, 0}))
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte3, byte2}))
 			elementItem.ElementName = "EngineSpeed_RPM"
 			elementItem.ElementValue = elementIntValue
@@ -333,8 +334,7 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[2] == byte5 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, eightbytes[2], 0, 0}))
-			elementIntValue := float64(byte2)
+			elementIntValue := (float64(byte2)) * 0.39063
 			elementItem.ElementName = "EngineThrottlePosition"
 			elementItem.ElementValue = elementIntValue
 			values = append(values, &elementItem)
@@ -448,7 +448,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 
 		if eightbytes[3] == byte4 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, eightbytes[3], eightbytes[2], eightbytes[1], eightbytes[0]}))
 			elementIntValue := float64(binary.BigEndian.Uint32([]byte{byte3, byte2, byte1, byte0}))
 			elementItem.ElementName = "distance"
 			elementItem.ElementValue = elementIntValue
@@ -473,8 +472,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[6] == byte1 {
 			var elementItem pb.IOElement
-			elementIntValue := float64(byte6)
-			elementItem.ElementName = "ActualAccPedal"
+			elementIntValue := (float64(byte6)) * 0.39063
+			elementItem.ElementName = "VirtualAccPedal"
 			elementItem.ElementValue = elementIntValue
 			values = append(values, &elementItem)
 
@@ -491,7 +490,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 
 		if eightbytes[1] == byte6 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, eightbytes[1], eightbytes[0]}))
 			elementIntValue := (float64(binary.BigEndian.Uint16([]byte{byte1, byte0}))) * 0.125
 			elementItem.ElementName = "DesiredSpeed"
 			elementItem.ElementValue = elementIntValue
@@ -500,7 +498,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[2] == byte5 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, eightbytes[2], 0, 0}))
 			elementIntValue := (float64(byte2)) - 40
 			elementItem.ElementName = "Oil temperature(TCU)"
 			elementItem.ElementValue = elementIntValue
@@ -508,7 +505,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[3] == byte4 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, eightbytes[3], 0, 0, 0}))
 			elementIntValue := ((float64(byte3)) * 0.5) - 40
 			elementItem.ElementName = "Ambient air temperature"
 			elementItem.ElementValue = elementIntValue
@@ -526,7 +522,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[5] == byte2 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, eightbytes[5], 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte5)
 			elementItem.ElementName = "EMS_DTC"
 			elementItem.ElementValue = elementIntValue
@@ -535,7 +530,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[6] == byte1 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, eightbytes[6], 0, 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte6)
 			elementItem.ElementName = "ABS_DTC"
 			elementItem.ElementValue = elementIntValue
@@ -544,7 +538,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[7] == byte0 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{eightbytes[7], 0, 0, 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte7)
 			elementItem.ElementName = "BCM_DTC"
 			elementItem.ElementValue = elementIntValue
@@ -554,7 +547,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 	case 149:
 		if eightbytes[0] == byte7 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, 0, eightbytes[0]}))
 			elementIntValue := float64(byte0)
 			elementItem.ElementName = "ACU_DTC"
 			elementItem.ElementValue = elementIntValue
@@ -563,7 +555,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[1] == byte6 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, eightbytes[1], 0}))
 			elementIntValue := float64(byte1)
 			elementItem.ElementName = "ESC_DTC"
 			elementItem.ElementValue = elementIntValue
@@ -572,7 +563,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[2] == byte5 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, eightbytes[2], 0, 0}))
 			elementIntValue := float64(byte2)
 			elementItem.ElementName = "ICN_DTC"
 			elementItem.ElementValue = elementIntValue
@@ -581,7 +571,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[3] == byte4 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, eightbytes[3], 0, 0, 0}))
 			elementIntValue := float64(byte3)
 			elementItem.ElementName = "EPS_DTC"
 			elementItem.ElementValue = elementIntValue
@@ -590,7 +579,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[4] == byte3 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, eightbytes[4], 0, 0, 0, 0}))
 			elementIntValue := float64(byte4)
 			elementItem.ElementName = "CAS_DTC"
 			elementItem.ElementValue = elementIntValue
@@ -599,7 +587,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[5] == byte2 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, eightbytes[5], 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte5)
 			elementItem.ElementName = "FCM/FN_DTC"
 			elementItem.ElementValue = elementIntValue
@@ -608,7 +595,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[6] == byte1 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, eightbytes[6], 0, 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte6)
 			elementItem.ElementName = "ICU_DTC"
 			elementItem.ElementValue = elementIntValue
@@ -617,7 +603,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[7] == byte0 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{eightbytes[7], 0, 0, 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte7)
 			elementItem.ElementName = "Reserve_DTC"
 			elementItem.ElementValue = elementIntValue
@@ -628,7 +613,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 
 		if eightbytes[0] == byte7 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, 0, eightbytes[0]}))
 			elementIntValue := float64(byte0)
 			elementItem.ElementName = "Sensor1_high"
 			elementItem.ElementValue = elementIntValue
@@ -637,7 +621,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[1] == byte6 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, eightbytes[1], 0}))
 			elementIntValue := float64(byte1)
 			elementItem.ElementName = "Sensor1_low"
 			elementItem.ElementValue = elementIntValue
@@ -646,7 +629,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[2] == byte5 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, eightbytes[2], 0, 0}))
 			elementIntValue := float64(byte2)
 			elementItem.ElementName = "Sensor2_high"
 			elementItem.ElementValue = elementIntValue
@@ -655,7 +637,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[3] == byte4 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, eightbytes[3], 0, 0, 0}))
 			elementIntValue := float64(byte3)
 			elementItem.ElementName = "Sensor2_low"
 			elementItem.ElementValue = elementIntValue
@@ -664,7 +645,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[4] == byte3 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, eightbytes[4], 0, 0, 0, 0}))
 			elementIntValue := float64(byte4)
 			elementItem.ElementName = "Sensor3_high"
 			elementItem.ElementValue = elementIntValue
@@ -673,7 +653,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[5] == byte2 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, eightbytes[5], 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte5)
 			elementItem.ElementName = "Sensor3_low"
 			elementItem.ElementValue = elementIntValue
@@ -682,7 +661,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[6] == byte1 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, eightbytes[6], 0, 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte6)
 			elementItem.ElementName = "Sensor4_high"
 			elementItem.ElementValue = elementIntValue
@@ -691,7 +669,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[7] == byte0 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{eightbytes[7], 0, 0, 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte7)
 			elementItem.ElementName = "Sensor4_low"
 			elementItem.ElementValue = elementIntValue
@@ -701,7 +678,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 	case 151:
 		if eightbytes[0] == byte7 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, 0, eightbytes[0]}))
 			elementIntValue := float64(byte0)
 			elementItem.ElementName = "Sensor5_high"
 			elementItem.ElementValue = elementIntValue
@@ -710,7 +686,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[1] == byte6 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, eightbytes[1], 0}))
 			elementIntValue := float64(byte1)
 			elementItem.ElementName = "Sensor5_low"
 			elementItem.ElementValue = elementIntValue
@@ -719,7 +694,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[2] == byte5 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, eightbytes[2], 0, 0}))
 			elementIntValue := float64(byte2)
 			elementItem.ElementName = "Sensor6_high"
 			elementItem.ElementValue = elementIntValue
@@ -728,7 +702,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[3] == byte4 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, eightbytes[3], 0, 0, 0}))
 			elementIntValue := float64(byte3)
 			elementItem.ElementName = "Sensor6_low"
 			elementItem.ElementValue = elementIntValue
@@ -737,7 +710,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[4] == byte3 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, eightbytes[4], 0, 0, 0, 0}))
 			elementIntValue := float64(byte4)
 			elementItem.ElementName = "Sensor7_high"
 			elementItem.ElementValue = elementIntValue
@@ -746,7 +718,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[5] == byte2 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, eightbytes[5], 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte5)
 			elementItem.ElementName = "Sensor7_low"
 			elementItem.ElementValue = elementIntValue
@@ -755,7 +726,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[6] == byte1 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, eightbytes[6], 0, 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte6)
 			elementItem.ElementName = "Sensor8_high"
 			elementItem.ElementValue = elementIntValue
@@ -764,7 +734,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[7] == byte0 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{eightbytes[7], 0, 0, 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte7)
 			elementItem.ElementName = "Sensor8_low"
 			elementItem.ElementValue = elementIntValue
@@ -775,7 +744,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 
 		if eightbytes[0] == byte7 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, 0, eightbytes[0]}))
 			elementIntValue := float64(byte0)
 			elementItem.ElementName = "Sensor9_high"
 			elementItem.ElementValue = elementIntValue
@@ -784,7 +752,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[1] == byte6 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, eightbytes[1], 0}))
 			elementIntValue := float64(byte1)
 			elementItem.ElementName = "Sensor9_low"
 			elementItem.ElementValue = elementIntValue
@@ -793,7 +760,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[2] == byte5 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, eightbytes[2], 0, 0}))
 			elementIntValue := float64(byte2)
 			elementItem.ElementName = "Sensor10_high"
 			elementItem.ElementValue = elementIntValue
@@ -801,7 +767,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[3] == byte4 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, eightbytes[3], 0, 0, 0}))
 			elementIntValue := float64(byte3)
 			elementItem.ElementName = "Sensor10_low"
 			elementItem.ElementValue = elementIntValue
@@ -810,7 +775,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[4] == byte3 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, eightbytes[4], 0, 0, 0, 0}))
 			elementIntValue := float64(byte4)
 			elementItem.ElementName = "Sensor11_high"
 			elementItem.ElementValue = elementIntValue
@@ -819,7 +783,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[5] == byte2 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, eightbytes[5], 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte5)
 			elementItem.ElementName = "Sensor11_low"
 			elementItem.ElementValue = elementIntValue
@@ -828,7 +791,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[6] == byte1 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, eightbytes[6], 0, 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte6)
 			elementItem.ElementName = "Sensor12_high"
 			elementItem.ElementValue = elementIntValue
@@ -837,7 +799,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[7] == byte0 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{eightbytes[7], 0, 0, 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte7)
 			elementItem.ElementName = "Sensor12_low"
 			elementItem.ElementValue = elementIntValue
@@ -849,7 +810,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 
 		if eightbytes[0] == byte7 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, 0, eightbytes[0]}))
 			elementIntValue := float64(byte0)
 			elementItem.ElementName = "Sensor13_high"
 			elementItem.ElementValue = elementIntValue
@@ -858,7 +818,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[1] == byte6 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, eightbytes[1], 0}))
 			elementIntValue := float64(byte1)
 			elementItem.ElementName = "Sensor13_low"
 			elementItem.ElementValue = elementIntValue
@@ -867,7 +826,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[2] == byte5 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, eightbytes[2], 0, 0}))
 			elementIntValue := float64(byte2)
 			elementItem.ElementName = "Sensor14_high"
 			elementItem.ElementValue = elementIntValue
@@ -876,7 +834,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[3] == byte4 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, eightbytes[3], 0, 0, 0}))
 			elementIntValue := float64(byte3)
 			elementItem.ElementName = "Sensor14_low"
 			elementItem.ElementValue = elementIntValue
@@ -885,7 +842,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[4] == byte3 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, eightbytes[4], 0, 0, 0, 0}))
 			elementIntValue := float64(byte4)
 			elementItem.ElementName = "Sensor15_high"
 			elementItem.ElementValue = elementIntValue
@@ -894,7 +850,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[5] == byte2 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, eightbytes[5], 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte5)
 			elementItem.ElementName = "Sensor15_low"
 			elementItem.ElementValue = elementIntValue
@@ -903,7 +858,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[6] == byte1 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, eightbytes[6], 0, 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte6)
 			elementItem.ElementName = "Sensor16_high"
 			elementItem.ElementValue = elementIntValue
@@ -912,7 +866,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[7] == byte0 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{eightbytes[7], 0, 0, 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte7)
 			elementItem.ElementName = "Sensor16_low"
 			elementItem.ElementValue = elementIntValue
@@ -924,7 +877,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 
 		if eightbytes[0] == byte7 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, 0, eightbytes[0]}))
 			elementIntValue := float64(byte0)
 			elementItem.ElementName = "Sensor17_high"
 			elementItem.ElementValue = elementIntValue
@@ -933,7 +885,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[1] == byte6 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, 0, eightbytes[1], 0}))
 			elementIntValue := float64(byte1)
 			elementItem.ElementName = "Sensor17_low"
 			elementItem.ElementValue = elementIntValue
@@ -942,7 +893,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[2] == byte5 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, 0, eightbytes[2], 0, 0}))
 			elementIntValue := float64(byte2)
 			elementItem.ElementName = "Sensor18_high"
 			elementItem.ElementValue = elementIntValue
@@ -951,7 +901,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[3] == byte4 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, 0, eightbytes[3], 0, 0, 0}))
 			elementIntValue := float64(byte3)
 			elementItem.ElementName = "Sensor18_low"
 			elementItem.ElementValue = elementIntValue
@@ -960,7 +909,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[4] == byte3 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, 0, eightbytes[4], 0, 0, 0, 0}))
 			elementIntValue := float64(byte4)
 			elementItem.ElementName = "Sensor19_high"
 			elementItem.ElementValue = elementIntValue
@@ -969,7 +917,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[5] == byte2 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, 0, eightbytes[5], 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte5)
 			elementItem.ElementName = "Sensor19_low"
 			elementItem.ElementValue = elementIntValue
@@ -978,7 +925,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[6] == byte1 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{0, eightbytes[6], 0, 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte6)
 			elementItem.ElementName = "Sensor20_high"
 			elementItem.ElementValue = elementIntValue
@@ -987,7 +933,6 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 		}
 		if eightbytes[7] == byte0 {
 			var elementItem pb.IOElement
-			//elementIntValue := float64(binary.BigEndian.Uint64([]byte{eightbytes[7], 0, 0, 0, 0, 0, 0, 0}))
 			elementIntValue := float64(byte7)
 			elementItem.ElementName = "Sensor20_low"
 			elementItem.ElementValue = elementIntValue

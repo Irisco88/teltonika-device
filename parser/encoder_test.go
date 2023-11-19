@@ -1,17 +1,15 @@
 package parser
 
 import (
-	"testing"
-	"time"
-
 	pb "github.com/irisco88/protos/gen/device/v1"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
+	"testing"
 )
 
 func TestEncodeAVLData(t *testing.T) {
-	nowTime := uint64(time.Now().UnixMilli())
-	twoHourLater := uint64(time.Now().Add(time.Hour * 2).UnixMilli())
+	//nowTime := uint64(time.Now().UnixMilli())
+	//twoHourLater := uint64(time.Now().Add(time.Hour * 2).UnixMilli())
 	tests := map[string]struct {
 		points       []*AVLData
 		wantedPoints []*pb.AVLData
@@ -22,7 +20,7 @@ func TestEncodeAVLData(t *testing.T) {
 			imei: "547865412456987452",
 			points: []*AVLData{
 				{
-					Timestamp:  nowTime,
+					Timestamp:  "",
 					Priority:   PriorityHigh,
 					Longitude:  -31.867449,
 					Latitude:   135.303686,
@@ -41,7 +39,7 @@ func TestEncodeAVLData(t *testing.T) {
 			wantedPoints: []*pb.AVLData{
 				{
 					Imei:      "547865412456987452",
-					Timestamp: nowTime,
+					Timestamp: "",
 					Priority:  pb.PacketPriority_PACKET_PRIORITY_HIGH,
 					EventId:   36,
 					Gps: &pb.GPS{
@@ -64,7 +62,7 @@ func TestEncodeAVLData(t *testing.T) {
 			imei: "547865412456987452",
 			points: []*AVLData{
 				{
-					Timestamp:  nowTime,
+					Timestamp:  "",
 					Priority:   PriorityHigh,
 					Longitude:  -31.867449,
 					Latitude:   135.303686,
@@ -80,7 +78,7 @@ func TestEncodeAVLData(t *testing.T) {
 					},
 				},
 				{
-					Timestamp:  twoHourLater,
+					Timestamp:  "",
 					Priority:   PriorityLow,
 					Longitude:  -20.867449,
 					Latitude:   60.303786,
@@ -100,7 +98,7 @@ func TestEncodeAVLData(t *testing.T) {
 			wantedPoints: []*pb.AVLData{
 				{
 					Imei:      "547865412456987452",
-					Timestamp: nowTime,
+					Timestamp: "",
 					Priority:  pb.PacketPriority_PACKET_PRIORITY_HIGH,
 					EventId:   36,
 					Gps: &pb.GPS{
@@ -119,7 +117,7 @@ func TestEncodeAVLData(t *testing.T) {
 				},
 				{
 					Imei:      "547865412456987452",
-					Timestamp: twoHourLater,
+					Timestamp: "",
 					Priority:  pb.PacketPriority_PACKET_PRIORITY_LOW,
 					EventId:   57,
 					Gps: &pb.GPS{
