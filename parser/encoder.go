@@ -22,6 +22,8 @@ type AVLData struct {
 type IOElement struct {
 	ElementName  string
 	ElementValue float64
+	NormalValue  float64
+	ColorValue   string
 }
 type IOElementVal struct {
 	ID     uint16

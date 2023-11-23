@@ -3,7 +3,6 @@ package clickhouse
 import (
 	"context"
 	pb "github.com/irisco88/protos/gen/device/v1"
-	"go.uber.org/zap"
 )
 
 const insertAvlPointQuery = `
@@ -14,8 +13,8 @@ const insertAvlPointQuery = `
 
 // SaveAvlPoints saves avl points to clickhouse
 func (adb *AVLDataBase) SaveAvlPoints(ctx context.Context, points []*pb.AVLData) error {
-	logger, _ := zap.NewDevelopment()
-	defer logger.Sync()
+	//logger, _ := zap.NewDevelopment()
+	//defer logger.Sync()
 
 	batch, err := adb.ClickhouseConn.PrepareBatch(ctx, insertAvlPointQuery)
 	if err != nil {
