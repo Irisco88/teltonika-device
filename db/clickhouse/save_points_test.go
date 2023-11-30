@@ -2,12 +2,10 @@ package clickhouse
 
 import (
 	"context"
-	"os"
-	"testing"
-	"time"
-
 	pb "github.com/irisco88/protos/gen/device/v1"
 	"gotest.tools/v3/assert"
+	"os"
+	"testing"
 )
 
 func NewConnTest(t *testing.T) AVLDBConn {
@@ -26,10 +24,10 @@ func TestAVLDataBase_SaveAvlPoints(t *testing.T) {
 			errWant: nil,
 			points: []*pb.AVLData{
 				{
-					Imei:      "457845652414565",
-					Timestamp: uint64(time.Now().UnixMilli()),
-					Priority:  pb.PacketPriority_PACKET_PRIORITY_HIGH,
-					EventId:   47,
+					Imei: "457845652414565",
+					//	Timestamp: uint64(time.Now().UnixMilli()),
+					Priority: pb.PacketPriority_PACKET_PRIORITY_HIGH,
+					EventId:  47,
 					Gps: &pb.GPS{
 						Longitude:  25.451,
 						Latitude:   31.654,
@@ -44,10 +42,10 @@ func TestAVLDataBase_SaveAvlPoints(t *testing.T) {
 					},
 				},
 				{
-					Imei:      "564123654789541",
-					Timestamp: uint64(time.Now().UnixMilli()),
-					Priority:  pb.PacketPriority_PACKET_PRIORITY_LOW,
-					EventId:   12,
+					Imei: "564123654789541",
+					//Timestamp: uint64(time.Now().UnixMilli()),
+					Priority: pb.PacketPriority_PACKET_PRIORITY_LOW,
+					EventId:  12,
 					Gps: &pb.GPS{
 						Longitude:  28.451,
 						Latitude:   16.654,

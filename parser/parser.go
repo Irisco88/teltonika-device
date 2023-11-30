@@ -244,7 +244,11 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			var elementItem pb.IOElement
 			elementIntValue := (float64(binary.BigEndian.Uint16([]byte{byte1, byte0}))) * 0.05625
 			elementItem.ElementName = "Vehicle Speed"
-			elementItem.ElementValue = elementIntValue
+			if elementIntValue > 200 {
+				elementItem.ElementValue = 200
+			} else {
+				elementItem.ElementValue = elementIntValue
+			}
 			elementItem.NormalValue = elementIntValue / 8189
 			elementItem.ColorValue = "#a09db2"
 			values = append(values, &elementItem)
@@ -720,7 +724,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte1, byte0}))
 			elementItem.ElementName = "Sensor1"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = elementIntValue / 0.7
+			//	elementItem.NormalValue = elementIntValue / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#008000"
 			values = append(values, &elementItem)
 		}
@@ -729,7 +734,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte3, byte2}))
 			elementItem.ElementName = "Sensor2"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = (elementIntValue - 1) / 0.7
+			//elementItem.NormalValue = (elementIntValue - 1) / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#808000"
 			values = append(values, &elementItem)
 		}
@@ -738,7 +744,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte5, byte4}))
 			elementItem.ElementName = "Sensor3"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = (elementIntValue - 2) / 0.7
+			//elementItem.NormalValue = (elementIntValue - 2) / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#800000"
 			values = append(values, &elementItem)
 		}
@@ -747,7 +754,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte7, byte6}))
 			elementItem.ElementName = "Sensor4"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = (elementIntValue - 3) / 0.7
+			//elementItem.NormalValue = (elementIntValue - 3) / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#398112"
 			values = append(values, &elementItem)
 		}
@@ -757,7 +765,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte1, byte0}))
 			elementItem.ElementName = "Sensor5"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = (elementIntValue - 4) / 0.7
+			//elementItem.NormalValue = (elementIntValue - 4) / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#12815E"
 			values = append(values, &elementItem)
 		}
@@ -766,7 +775,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte3, byte2}))
 			elementItem.ElementName = "Sensor6"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = (elementIntValue - 5) / 0.7
+			//elementItem.NormalValue = (elementIntValue - 5) / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#125781"
 			values = append(values, &elementItem)
 		}
@@ -775,7 +785,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte5, byte4}))
 			elementItem.ElementName = "Sensor7"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = (elementIntValue - 6) / 0.7
+			//elementItem.NormalValue = (elementIntValue - 6) / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#7E1281"
 			values = append(values, &elementItem)
 		}
@@ -784,7 +795,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte7, byte6}))
 			elementItem.ElementName = "Sensor8"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = (elementIntValue - 7) / 0.7
+			//elementItem.NormalValue = (elementIntValue - 7) / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#811241"
 			values = append(values, &elementItem)
 		}
@@ -795,7 +807,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte1, byte0}))
 			elementItem.ElementName = "Sensor9"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = elementIntValue / 0.7
+			//elementItem.NormalValue = elementIntValue / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#817C12"
 			values = append(values, &elementItem)
 		}
@@ -805,7 +818,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte3, byte2}))
 			elementItem.ElementName = "Sensor10"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = (elementIntValue - 1) / 0.7
+			//elementItem.NormalValue = (elementIntValue - 1) / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#F4E60E"
 			values = append(values, &elementItem)
 		}
@@ -815,7 +829,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte5, byte4}))
 			elementItem.ElementName = "Sensor11"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = (elementIntValue - 2) / 0.7
+			//elementItem.NormalValue = (elementIntValue - 2) / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#0E99F4"
 			values = append(values, &elementItem)
 		}
@@ -825,7 +840,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte7, byte6}))
 			elementItem.ElementName = "Sensor12"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = (elementIntValue - 3) / 0.7
+			//elementItem.NormalValue = (elementIntValue - 3) / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#F40EED"
 			values = append(values, &elementItem)
 		}
@@ -837,7 +853,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte1, byte0}))
 			elementItem.ElementName = "Sensor13"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = (elementIntValue - 4) / 0.7
+			//elementItem.NormalValue = (elementIntValue - 4) / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#FF6C00"
 			values = append(values, &elementItem)
 
@@ -848,7 +865,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte3, byte2}))
 			elementItem.ElementName = "Sensor14"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = (elementIntValue - 5) / 0.7
+			//elementItem.NormalValue = (elementIntValue - 5) / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#00FF55"
 			values = append(values, &elementItem)
 		}
@@ -858,7 +876,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte5, byte4}))
 			elementItem.ElementName = "Sensor15"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = (elementIntValue - 6) / 0.7
+			//elementItem.NormalValue = (elementIntValue - 6) / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#9B00FF"
 			values = append(values, &elementItem)
 		}
@@ -868,7 +887,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte7, byte6}))
 			elementItem.ElementName = "Sensor16"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = (elementIntValue - 7) / 0.7
+			//elementItem.NormalValue = (elementIntValue - 7) / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#FF008F"
 			values = append(values, &elementItem)
 		}
@@ -880,7 +900,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte1, byte0}))
 			elementItem.ElementName = "Sensor17"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = (elementIntValue - 7) / 0.7
+			//elementItem.NormalValue = (elementIntValue - 7) / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#51022E"
 			values = append(values, &elementItem)
 		}
@@ -890,7 +911,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte3, byte2}))
 			elementItem.ElementName = "Sensor18"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = (elementIntValue - 7) / 0.7
+			//elementItem.NormalValue = (elementIntValue - 7) / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#02513A"
 			values = append(values, &elementItem)
 		}
@@ -900,7 +922,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte5, byte4}))
 			elementItem.ElementName = "Sensor19"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = (elementIntValue - 7) / 0.7
+			//elementItem.NormalValue = (elementIntValue - 7) / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#512B02"
 			values = append(values, &elementItem)
 		}
@@ -910,7 +933,8 @@ func parseNEightValue(reader *bytes.Buffer, elementId uint16) (value []*pb.IOEle
 			elementIntValue := float64(binary.BigEndian.Uint16([]byte{byte7, byte6}))
 			elementItem.ElementName = "Sensor20"
 			elementItem.ElementValue = elementIntValue
-			elementItem.NormalValue = (elementIntValue - 7) / 0.7
+			//elementItem.NormalValue = (elementIntValue - 7) / 0.7
+			elementItem.NormalValue = 1
 			elementItem.ColorValue = "#A41B9E"
 			values = append(values, &elementItem)
 		}
