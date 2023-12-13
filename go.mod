@@ -6,7 +6,7 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.2.0
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/golang/mock v1.6.0
-	github.com/irisco88/protos v1.1.31
+	github.com/irisco88/protos v1.2.6
 	github.com/nats-io/nats-server/v2 v2.9.17
 	github.com/nats-io/nats.go v1.26.0
 	github.com/urfave/cli/v2 v2.25.3
@@ -37,6 +37,6 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/crypto v0.8.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 )
